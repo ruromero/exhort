@@ -60,10 +60,8 @@ import jakarta.ws.rs.core.Response;
 @RegisterForReflection
 public class GraphUtils {
 
-  public static final String DEFAULT_APP_NAME = "com.redhat.ecosystemappeng:default-app";
-  public static final String DEFAULT_APP_VERSION = "0.0.1";
   public static final PackageRef DEFAULT_ROOT =
-      new PackageRef(DEFAULT_APP_NAME, DEFAULT_APP_VERSION);
+      PackageRef.build("com.redhat.ecosystemappeng", "default-app", "0.0.1");
 
   private static final ObjectMapper mapper = ObjectMapperProducer.newInstance();
   private static final Logger LOGGER = LoggerFactory.getLogger(GraphUtils.class);
@@ -244,18 +242,13 @@ public class GraphUtils {
   }
 
   private PackageRef fromPurl(String purl, boolean decode) {
-    PackageURL packageUrl;
     try {
       if (decode) {
-        packageUrl = new PackageURL(URLDecoder.decode(purl, StandardCharsets.UTF_8.name()));
-      } else {
-        packageUrl = new PackageURL(purl);
+        return PackageRef.build(
+            new PackageURL(URLDecoder.decode(purl, StandardCharsets.UTF_8.name())));
       }
-      if (packageUrl.getNamespace() != null) {
-        return new PackageRef(
-            packageUrl.getNamespace() + ":" + packageUrl.getName(), packageUrl.getVersion());
-      }
-      return new PackageRef(packageUrl.getName(), packageUrl.getVersion());
+      return PackageRef.build(new PackageURL(purl));
+
     } catch (MalformedPackageURLException | UnsupportedEncodingException e) {
       LOGGER.warn("Unsupported PURL format {}", purl, e);
       throw new IllegalArgumentException("Unsupported PURL format: " + purl, e);

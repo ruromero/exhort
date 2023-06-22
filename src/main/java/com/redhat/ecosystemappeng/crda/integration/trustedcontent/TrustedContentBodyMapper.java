@@ -28,6 +28,9 @@ import java.util.stream.Collectors;
 
 import org.apache.camel.Body;
 
+import com.github.packageurl.MalformedPackageURLException;
+import com.github.packageurl.PackageURL;
+import com.redhat.ecosystemappeng.crda.integration.Constants;
 import com.redhat.ecosystemappeng.crda.model.GraphRequest;
 import com.redhat.ecosystemappeng.crda.model.PackageRef;
 import com.redhat.ecosystemappeng.crda.model.Remediation;
@@ -57,8 +60,9 @@ public class TrustedContentBodyMapper {
       if (result != null) {
         String cve = request.cves().get(i);
         PackageRef ref =
-            new PackageRef(
-                result.mavenPackage().groupId() + ":" + result.mavenPackage().artifactId(),
+            toMavenPkgRef(
+                result.mavenPackage().artifactId(),
+                result.mavenPackage().groupId(),
                 result.mavenPackage().version());
         Remediation r = new Remediation(cve, ref, result.productStatus());
         remediations.put(cve, r);
@@ -108,10 +112,19 @@ public class TrustedContentBodyMapper {
     for (int i = 0; i < gavRequest.size(); i++) {
       MavenPackage pkg = recommendations.get(i);
       if (pkg != null) {
-        String pkgName = String.format("%s:%s", pkg.groupId(), pkg.artifactId());
-        result.put(gavRequest.get(i), new PackageRef(pkgName, pkg.version()));
+        result.put(
+            gavRequest.get(i), toMavenPkgRef(pkg.groupId(), pkg.artifactId(), pkg.version()));
       }
     }
     return result;
+  }
+
+  private PackageRef toMavenPkgRef(String groupId, String artifactId, String version) {
+    try {
+      return PackageRef.build(
+          new PackageURL(Constants.MAVEN_PKG_MANAGER, artifactId, groupId, version, null, null));
+    } catch (MalformedPackageURLException e) {
+      return PackageRef.build(groupId, artifactId, version);
+    }
   }
 }

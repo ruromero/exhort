@@ -21,11 +21,16 @@ package com.redhat.ecosystemappeng.crda.model;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.github.packageurl.PackageURL;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
-public record PackageRef(String name, String version) {
+public record PackageRef(
+    String name,
+    String version,
+    @JsonSerialize(using = PackageURLSerializer.class) PackageURL purl) {
 
   public PackageRef {
     Objects.requireNonNull(name);
@@ -60,9 +65,27 @@ public record PackageRef(String name, String version) {
     }
     String name = parts[0] + ":" + parts[1];
     if (parts.length < 6) {
-      return new PackageRef(name, parts[3]);
+      return build(name, parts[3]);
     }
-    return new PackageRef(name, parts[4]);
+    return build(name, parts[4]);
+  }
+
+  public static PackageRef build(PackageURL purl) {
+    if (Objects.isNull(purl.getNamespace())) {
+      return new PackageRef(purl.getName(), purl.getVersion(), purl);
+    }
+    return new PackageRef(purl.getNamespace() + ":" + purl.getName(), purl.getVersion(), purl);
+  }
+
+  public static PackageRef build(String name, String version) {
+    return new PackageRef(name, version, null);
+  }
+
+  public static PackageRef build(String namespace, String name, String version) {
+    if (Objects.isNull(namespace)) {
+      return new PackageRef(name, version, null);
+    }
+    return new PackageRef(namespace + ":" + name, version, null);
   }
 
   public String toGav() {

@@ -38,7 +38,7 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public class SnykIntegration extends EndpointRouteBuilder {
 
-  @ConfigProperty(name = "api.snyk.timeout", defaultValue = "20s")
+  @ConfigProperty(name = "api.snyk.timeout", defaultValue = "10s")
   String timeout;
 
   @ConfigProperty(name = "api.snyk.token")
@@ -66,7 +66,7 @@ public class SnykIntegration extends EndpointRouteBuilder {
           .end()
             .to(vertxHttp("{{api.snyk.host}}"))
         .onFallback()
-          .process(this::processSnykResponseError);
+          .process(this::processResponseError);
 
     from(direct("validateSnykToken"))
         .routeId("snykValidateToken")
@@ -137,7 +137,7 @@ public class SnykIntegration extends EndpointRouteBuilder {
     exchange.getMessage().setBody(body);
   }
 
-  private void processSnykResponseError(Exchange exchange) {
+  private void processResponseError(Exchange exchange) {
     ProviderStatus.Builder builder =
         ProviderStatus.builder().ok(false).provider(Constants.SNYK_PROVIDER);
     Exception exception = (Exception) exchange.getProperty(Exchange.EXCEPTION_CAUGHT);

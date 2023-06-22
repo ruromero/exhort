@@ -83,7 +83,8 @@ public class ReportTransformerTest {
 
   @Test
   public void testFilterRecommendations() {
-    Map<String, PackageRef> recommendations = Map.of("aa:1", new PackageRef("aa", "1.redhat-0001"));
+    Map<String, PackageRef> recommendations =
+        Map.of("aa:1", PackageRef.build("aa", "1.redhat-0001"));
     GraphRequest req =
         new GraphRequest.Builder(Constants.MAVEN_PKG_MANAGER, List.of(Constants.SNYK_PROVIDER))
             .tree(buildTree())
@@ -102,21 +103,21 @@ public class ReportTransformerTest {
   private DependencyTree buildTree() {
     Map<PackageRef, DirectDependency> direct =
         Map.of(
-            new PackageRef("aa", "1"),
+            PackageRef.build("aa", "1"),
                 DirectDependency.builder()
-                    .ref(new PackageRef("aa", "1"))
-                    .transitive(Set.of(new PackageRef("aaa", "1"), new PackageRef("aab", "1")))
+                    .ref(PackageRef.build("aa", "1"))
+                    .transitive(Set.of(PackageRef.build("aaa", "1"), PackageRef.build("aab", "1")))
                     .build(),
-            new PackageRef("ab", "1"),
+            PackageRef.build("ab", "1"),
                 DirectDependency.builder()
-                    .ref(new PackageRef("ab", "1"))
+                    .ref(PackageRef.build("ab", "1"))
                     .transitive(
                         Set.of(
-                            new PackageRef("aba", "1"),
-                            new PackageRef("abb", "1"),
-                            new PackageRef("abc", "1")))
+                            PackageRef.build("aba", "1"),
+                            PackageRef.build("abb", "1"),
+                            PackageRef.build("abc", "1")))
                     .build());
-    return DependencyTree.builder().root(new PackageRef("a", "1")).dependencies(direct).build();
+    return DependencyTree.builder().root(PackageRef.build("a", "1")).dependencies(direct).build();
   }
 
   private Issue buildIssue(int id, Float score) {

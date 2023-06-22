@@ -536,7 +536,7 @@ public class DependencyAnalysisTest extends AbstractAnalysisTest {
   private void assertDependenciesReport(List<DependencyReport> dependencies) {
     assertEquals(2, dependencies.size());
 
-    PackageRef hibernate = new PackageRef("io.quarkus:quarkus-hibernate-orm", "2.13.5.Final");
+    PackageRef hibernate = PackageRef.build("io.quarkus", "quarkus-hibernate-orm", "2.13.5.Final");
     DependencyReport report = getReport(hibernate.name(), dependencies);
     assertNotNull(report);
     assertEquals(hibernate, report.ref());
@@ -547,14 +547,15 @@ public class DependencyAnalysisTest extends AbstractAnalysisTest {
 
     assertEquals(1, report.transitive().size());
     TransitiveDependencyReport tReport = report.transitive().get(0);
-    PackageRef jackson = new PackageRef("com.fasterxml.jackson.core:jackson-databind", "2.13.1");
+    PackageRef jackson =
+        PackageRef.build("com.fasterxml.jackson.core", "jackson-databind", "2.13.1");
     assertEquals(jackson, tReport.ref());
     assertEquals(3, tReport.issues().size());
     assertEquals(tReport.highestVulnerability(), tReport.issues().get(0));
     assertEquals(report.highestVulnerability(), tReport.highestVulnerability());
 
     assertEquals(
-        new PackageRef(jackson.name(), "2.13.1.Final-redhat-00002"),
+        PackageRef.build(jackson.name(), "2.13.1.Final-redhat-00002"),
         tReport.remediations().get("CVE-2020-36518").mavenPackage());
 
     assertNull(tReport.remediations().get("CVE-2022-42003"));

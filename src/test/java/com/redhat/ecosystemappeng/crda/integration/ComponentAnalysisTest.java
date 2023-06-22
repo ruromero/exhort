@@ -80,9 +80,9 @@ public class ComponentAnalysisTest extends AbstractAnalysisTest {
 
     List<PackageRef> pkgs =
         List.of(
-            new PackageRef("com.fasterxml.jackson.core:jackson-databind", "2.13.1"),
-            new PackageRef("io.quarkus:quarkus-jdbc-postgresql", "2.13.5"));
-    new PackageRef("com.acme:example", "1.2.3");
+            PackageRef.build("com.fasterxml.jackson.core:jackson-databind", "2.13.1"),
+            PackageRef.build("io.quarkus:quarkus-jdbc-postgresql", "2.13.5"));
+    PackageRef.build("com.acme:example", "1.2.3");
 
     String body =
         given()
@@ -111,8 +111,8 @@ public class ComponentAnalysisTest extends AbstractAnalysisTest {
     stubTideliftRequest(null);
     List<PackageRef> pkgs =
         List.of(
-            new PackageRef("log4j:log4j", "1.2.17"),
-            new PackageRef("io.netty:netty-common", "4.1.86"));
+            PackageRef.build("log4j:log4j", "1.2.17"),
+            PackageRef.build("io.netty:netty-common", "4.1.86"));
 
     String body =
         given()
@@ -143,9 +143,9 @@ public class ComponentAnalysisTest extends AbstractAnalysisTest {
 
     List<PackageRef> pkgs =
         List.of(
-            new PackageRef("com.fasterxml.jackson.core:jackson-databind", "2.13.1"),
-            new PackageRef("io.quarkus:quarkus-jdbc-postgresql", "2.13.5"));
-    new PackageRef("com.acme:example", "1.2.3");
+            PackageRef.build("com.fasterxml.jackson.core:jackson-databind", "2.13.1"),
+            PackageRef.build("io.quarkus:quarkus-jdbc-postgresql", "2.13.5"));
+    PackageRef.build("com.acme:example", "1.2.3");
 
     String body =
         given()
@@ -179,8 +179,8 @@ public class ComponentAnalysisTest extends AbstractAnalysisTest {
 
     List<PackageRef> pkgs =
         List.of(
-            new PackageRef("log4j:log4j", "1.2.17"),
-            new PackageRef("io.netty:netty-common", "4.1.86"));
+            PackageRef.build("log4j:log4j", "1.2.17"),
+            PackageRef.build("io.netty:netty-common", "4.1.86"));
 
     String body =
         given()

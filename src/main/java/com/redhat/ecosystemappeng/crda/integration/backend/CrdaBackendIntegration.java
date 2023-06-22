@@ -112,11 +112,9 @@ public class CrdaBackendIntegration extends EndpointRouteBuilder {
 
     from(direct("findVulnerabilities"))
         .routeId("findVulnerabilities")
-        .multicast(AggregationStrategies.bean(ProviderAggregationStrategy.class, "aggregate"))
-            .parallelProcessing()
-                .recipientList(method(vulnerabilityProvider, "getProviderEndpoints"))
-            .end()
-        .end();
+        .recipientList(method(vulnerabilityProvider, "getProviderEndpoints"))
+        .aggregationStrategy(AggregationStrategies.bean(ProviderAggregationStrategy.class, "aggregate"))
+            .parallelProcessing();
 
     from(direct("cleanUpResponse"))
         .routeId("cleanUpResponseHeaders")

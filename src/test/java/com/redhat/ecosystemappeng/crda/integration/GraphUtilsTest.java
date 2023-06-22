@@ -41,7 +41,7 @@ import jakarta.ws.rs.core.Response;
 public class GraphUtilsTest {
 
   private static final PackageRef EXPECTED_ROOT =
-      new PackageRef("org.acme.dbaas:postgresql-orm-quarkus", "1.0.0-SNAPSHOT");
+      PackageRef.build("org.acme.dbaas", "postgresql-orm-quarkus", "1.0.0-SNAPSHOT");
 
   @Test
   public void testParseEmptyDotFile() {
@@ -174,13 +174,15 @@ public class GraphUtilsTest {
             Constants.GOMOD_PKG_MANAGER,
             12,
             35,
-            new PackageRef(
-                "github.com/fabric8-analytics:cli-tools", "v0.2.6-0.20211007133944-2af417bfb988")),
+            PackageRef.build(
+                "github.com/fabric8-analytics",
+                "cli-tools",
+                "v0.2.6-0.20211007133944-2af417bfb988")),
         arguments(
             Constants.NPM_PKG_MANAGER,
             6,
             10,
-            new PackageRef("fabric8-analytics-lsp-server", "0.0.0-development")),
+            PackageRef.build("fabric8-analytics-lsp-server", "0.0.0-development")),
         arguments(Constants.PIP_PKG_MANAGER, 96, 0, GraphUtils.DEFAULT_ROOT));
   }
 }
