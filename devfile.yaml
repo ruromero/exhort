@@ -1,7 +1,7 @@
 schemaVersion: 2.2.0
 metadata:
   name: exhort
-  version: 1.0.0
+  version: 1.0.1
   provider: Red Hat
   supportUrl: https://github.com/RHEcosystemAppEng/exhort/issues
   icon: https://github.com/fabric8-analytics/fabric8-analytics-vscode-extension/blob/master/icon/trusted_content_icon.png?raw=true
