@@ -2,19 +2,19 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   annotations:
-    build.appstudio.openshift.io/repo: https://github.com/RHEcosystemAppEng/exhort?rev={{revision}}
+    build.appstudio.openshift.io/repo: https://github.com/ruromero/exhort?rev={{revision}}
     build.appstudio.redhat.com/commit_sha: '{{revision}}'
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     pipelinesascode.tekton.dev/on-event: '[push]'
-    pipelinesascode.tekton.dev/on-target-branch: '[stable]'
+    pipelinesascode.tekton.dev/on-target-branch: '[appstudio-integration]'
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: exhort-alpha
+    appstudio.openshift.io/application: exhort
     appstudio.openshift.io/component: exhort
     pipelines.appstudio.openshift.io/type: build
   name: exhort-on-push
-  namespace: trusted-content-tenant
+  namespace: rhn-support-rromerom-tenant
 spec:
   params:
   - name: dockerfile
@@ -22,7 +22,7 @@ spec:
   - name: git-url
     value: '{{repo_url}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/trusted-content-tenant/exhort-alpha/exhort:{{revision}}
+    value: quay.io/redhat-user-workloads/rhn-support-rromerom-tenant/exhort/exhort:{{revision}}
   - name: path-context
     value: .
   - name: revision
