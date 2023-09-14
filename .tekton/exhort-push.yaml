@@ -10,7 +10,7 @@ metadata:
     pipelinesascode.tekton.dev/on-target-branch: '[appstudio-integration]'
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: exhort
+    appstudio.openshift.io/application: exhort-1
     appstudio.openshift.io/component: exhort
     pipelines.appstudio.openshift.io/type: build
   name: exhort-on-push
@@ -22,7 +22,7 @@ spec:
   - name: git-url
     value: '{{repo_url}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/rhn-support-rromerom-tenant/exhort/exhort:{{revision}}
+    value: quay.io/redhat-user-workloads/rhn-support-rromerom-tenant/exhort-1/exhort:{{revision}}
   - name: path-context
     value: .
   - name: revision
@@ -219,9 +219,9 @@ spec:
       taskRef:
         params:
         - name: name
-          value: buildah-8gb
+          value: buildah
         - name: bundle
-          value: quay.io/redhat-appstudio-tekton-catalog/task-buildah-8gb:0.1@sha256:77f0ce2fe87a102c0a37624def54ac2cc571288f3bcb7f33a2e7dfad54dc9c15
+          value: quay.io/redhat-appstudio-tekton-catalog/task-buildah:0.1@sha256:e607665f13adadbd4a8d0b32768fc1b24a90884d867ecb681e15c5bc25434f71
         - name: kind
           value: task
         resolver: bundles
