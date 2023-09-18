@@ -1,13 +1,7 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: exhort
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: exhort
-  namespace: exhort
   labels:
     app: exhort
 spec:
@@ -65,7 +59,6 @@ metadata:
   labels:
     app: exhort
   name: exhort
-  namespace: exhort
 spec:
   ports:
   - name: http
