@@ -44,7 +44,6 @@ spec:
             path: /q/health/ready
             port: 9000
           initialDelaySeconds: 5
-          periodSeconds: 105
           periodSeconds: 20
         
 ---
