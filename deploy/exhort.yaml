@@ -34,6 +34,11 @@ spec:
           value: "true"
         - name: TELEMETRY_DISABLED
           value: "true"
+        - name: API_SNYK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: api-snyk-token
+              name: exhort-secret
         livenessProbe:
           httpGet:
             path: /q/health/live
