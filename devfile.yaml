@@ -7,7 +7,7 @@ metadata:
   icon: https://github.com/fabric8-analytics/fabric8-analytics-vscode-extension/blob/master/icon/trusted_content_icon.png?raw=true
   website: https://github.com/RHEcosystemAppEng/exhort
   displayName: Exhort
-  description: Exhort
+  description: Red Hat Trusted Profile Analizer - Exhort
   tags:
     - Java
     - Quarkus
