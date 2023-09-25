@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: exhort
-        image: quay.io/ecosystem-appeng/exhort:latest
+        image: exhort:latest
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
