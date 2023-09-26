@@ -39,6 +39,9 @@ components:
         - name: http
           targetPort: 8080
           path: /
+        - name: management
+          targetPort: 9000
+          path: /
 commands:
   - id: build-image
     apply:
