@@ -32,15 +32,12 @@ components:
       deployment/replicas: 1
       deployment/cpuRequest: 10m
       deployment/memoryRequest: 128Mi
-      deployment/container-port: 8080
+      deployment/container-port: 9000
     kubernetes:
       uri: deploy/exhort.yaml
       endpoints:
         - name: http
           targetPort: 8080
-          path: /
-        - name: management
-          targetPort: 9000
           path: /
 commands:
   - id: build-image
