@@ -48,9 +48,8 @@ public final class Constants {
 
   public static final String SNYK_PROVIDER = "snyk";
   public static final String OSS_INDEX_PROVIDER = "oss-index";
+  public static final String TRUSTIFICATION_PROVIDER = "trustification";
   public static final String UNKNOWN_PROVIDER = "unknown";
-
-  public static final String TRUSTED_CONTENT_NAME = "trusted-content";
 
   public static final String MAVEN_PKG_MANAGER = "maven";
   public static final String NPM_PKG_MANAGER = "npm";
@@ -71,8 +70,7 @@ public final class Constants {
   public static final String SNYK_DEP_GRAPH_API_PATH = "/test/dep-graph";
   public static final String SNYK_TOKEN_API_PATH = "/user/me";
   public static final String OSS_INDEX_AUTH_COMPONENT_API_PATH = "/authorized/component-report";
-  public static final String TRUSTED_CONTENT_PATH = "/api/policy/v1alpha1/trusted::gav";
-  public static final String TRUSTED_CONTENT_VEX_PATH = "/tc";
+  public static final String TRUSTIFICATION_ANALYZE_API_PATH = "/analyze";
 
   public static final String DEFAULT_ACCEPT_MEDIA_TYPE = MediaType.APPLICATION_JSON;
   public static final boolean DEFAULT_VERBOSE_MODE = false;
@@ -94,6 +92,7 @@ public final class Constants {
             {
               add(SNYK_PROVIDER);
               add(OSS_INDEX_PROVIDER);
+              add(TRUSTIFICATION_PROVIDER);
             }
           });
 

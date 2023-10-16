@@ -29,8 +29,8 @@ import org.apache.camel.builder.endpoint.EndpointRouteBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.redhat.exhort.integration.Constants;
-import com.redhat.exhort.integration.VulnerabilityProvider;
 import com.redhat.exhort.integration.backend.BackendUtils;
+import com.redhat.exhort.integration.providers.VulnerabilityProvider;
 import com.redhat.exhort.model.DependencyTree;
 
 import jakarta.enterprise.context.ApplicationScoped;

@@ -55,7 +55,7 @@ public class SnykResponseHandler extends ProviderResponseHandler {
       throws IOException {
     boolean filterUnique = privateProviders != null && privateProviders.contains(SNYK_PROVIDER);
 
-    JsonNode snykResponse = mapper.readTree((byte[]) providerResponse);
+    JsonNode snykResponse = mapper.readTree(providerResponse);
     return getIssues(snykResponse, filterUnique);
   }
 

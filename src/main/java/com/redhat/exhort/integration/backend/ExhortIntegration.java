@@ -34,10 +34,10 @@ import org.apache.camel.component.micrometer.routepolicy.MicrometerRoutePolicyFa
 
 import com.redhat.exhort.analytics.AnalyticsService;
 import com.redhat.exhort.integration.Constants;
-import com.redhat.exhort.integration.VulnerabilityProvider;
 import com.redhat.exhort.integration.backend.sbom.SbomParser;
 import com.redhat.exhort.integration.backend.sbom.SbomParserFactory;
 import com.redhat.exhort.integration.providers.ProviderAggregationStrategy;
+import com.redhat.exhort.integration.providers.VulnerabilityProvider;
 import com.redhat.exhort.model.DependencyTree;
 
 import io.micrometer.core.instrument.MeterRegistry;
