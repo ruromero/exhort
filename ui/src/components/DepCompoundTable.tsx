@@ -26,7 +26,7 @@ import {DependencyLink} from './DependencyLink';
 import {TransitiveDependenciesTable} from './TransitiveDependenciesTable';
 import {VulnerabilitiesTable} from './VulnerabilitiesTable';
 import {VulnerabilitiesCountBySeverity} from './VulnerabilitiesCountBySeverity'
-import {extractDependencyVersion} from '../utils/utils';
+import {extractDependencyType, extractDependencyVersion} from '../utils/utils';
 import CubesIcon from "@patternfly/react-icons/dist/esm/icons/cubes-icon";
 import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
 import {ConditionalTableBody} from './TableControls/ConditionalTableBody';
@@ -70,6 +70,7 @@ export const DepCompoundTable = ({name, dependencies}: { name: string; dependenc
 
   const columnNames = {
     name: 'Dependency Name',
+    type: 'Type',
     version: 'Current Version',
     direct: 'Direct Vulnerabilities',
     transitive: 'Transitive Vulnerabilities',
@@ -173,6 +174,7 @@ export const DepCompoundTable = ({name, dependencies}: { name: string; dependenc
                           onSort: onChangeSortBy,
                         }}
                     >{columnNames.name}</Th>
+                    <Th>{columnNames.type}</Th>
                     <Th>{columnNames.version}</Th>
                     <Th>{columnNames.direct}</Th>
                     <Th>{columnNames.transitive}</Th>
@@ -202,6 +204,9 @@ export const DepCompoundTable = ({name, dependencies}: { name: string; dependenc
                       <Tr>
                         <Td width={30} dataLabel={columnNames.name} component="th">
                           <DependencyLink name={item.ref}/>
+                        </Td>
+                        <Td width={10} dataLabel={columnNames.type}>
+                          {extractDependencyType(item.ref)}
                         </Td>
                         <Td
                           width={15}

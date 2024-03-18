@@ -98,6 +98,11 @@ export const extractDependencyUrl = (name: string) => {
   }
 };
 
+export const extractDependencyType = (ref: string): string => {
+  const type = PackageURL.fromString(ref).type;
+  return type ? type : '';
+}
+
 export const extractDependencyVersion = (name: string): string => {
   const version = PackageURL.fromString(name).version;
   return version ? version : '';
