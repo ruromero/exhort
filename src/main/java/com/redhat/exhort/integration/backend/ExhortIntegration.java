@@ -154,10 +154,10 @@ public class ExhortIntegration extends EndpointRouteBuilder {
         .to("direct:batchAnalysis")
       .get("/v3/token")
         .routeId("v3restTokenValidation")
-        .to("direct:validateToken")
+        .to("direct:v3validateToken")
       .get("/v4/token")
         .routeId("restTokenValidation")
-        .to("direct:validateToken");
+        .to("direct:v4validateToken");
 
     from(direct("v3analysis"))
       .routeId("v3Analysis")
@@ -168,6 +168,9 @@ public class ExhortIntegration extends EndpointRouteBuilder {
       .routeId("v4Analysis")
       .setProperty(Constants.API_VERSION_PROPERTY, constant(Constants.API_VERSION_V4))
       .to(direct("analysis"));
+
+    from(direct("v3validateToken")).toD("direct:validateToken");
+    from(direct("v4validateToken")).toD("direct:validateToken");
 
     from(direct("analysis"))
       .routeId("dependencyAnalysis")
@@ -241,8 +244,11 @@ public class ExhortIntegration extends EndpointRouteBuilder {
           .setProperty(PROVIDERS_PARAM, constant(Arrays.asList(Constants.SNYK_PROVIDER)))
           .to(direct("snykValidateToken"))
         .when(header(Constants.OSS_INDEX_TOKEN_HEADER).isNotNull())
-        .setProperty(PROVIDERS_PARAM, constant(Arrays.asList(Constants.OSS_INDEX_PROVIDER)))
+          .setProperty(PROVIDERS_PARAM, constant(Arrays.asList(Constants.OSS_INDEX_PROVIDER)))
           .to(direct("ossValidateCredentials"))
+        .when(header(Constants.TPA_TOKEN_HEADER).isNotNull())
+          .setProperty(PROVIDERS_PARAM, constant(Arrays.asList(Constants.TPA_PROVIDER)))
+          .to(direct("tpaValidateCredentials"))
         .otherwise()
           .setProperty(PROVIDERS_PARAM, constant(Arrays.asList(Constants.UNKNOWN_PROVIDER)))
           .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(Response.Status.BAD_REQUEST.getStatusCode()))
