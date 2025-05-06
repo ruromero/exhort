@@ -99,7 +99,8 @@ public class ExhortIntegration extends EndpointRouteBuilder {
     getContext().getRegistry().bind(MicrometerConstants.METRICS_REGISTRY_NAME, registry);
     getContext().addRoutePolicyFactory(new MicrometerRoutePolicyFactory());
     
-    restConfiguration().contextPath("/api/")
+    restConfiguration()
+      .contextPath("/api")
       .clientRequestValidation(true);
 
     errorHandler(deadLetterChannel("direct:processInternalError"));
@@ -157,7 +158,10 @@ public class ExhortIntegration extends EndpointRouteBuilder {
         .to("direct:v3validateToken")
       .get("/v4/token")
         .routeId("restTokenValidation")
-        .to("direct:v4validateToken");
+        .to("direct:v4validateToken")
+      .get("/v4/model-cards/{modelNs}/{modelName}")
+        .routeId("restGetModelCard")
+        .to("direct:getModelCard");
 
     from(direct("v3analysis"))
       .routeId("v3Analysis")
