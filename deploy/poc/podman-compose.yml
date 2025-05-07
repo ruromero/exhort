@@ -6,30 +6,29 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # - QUARKUS_REDIS_HOST=redis
-      # - QUARKUS_REDIS_PORT=6379
+      - QUARKUS_REDIS_HOST=redis
+      - QUARKUS_REDIS_PORT=6379
       - TELEMETRY_DISABLED=true
-      - API_TPA_DISABLED=true
       - AWS_REGION=${AWS_REGION}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-    # depends_on:
-    #   - redis
-    # networks:
-    #   - exhort-network
+    depends_on:
+      - redis
+    networks:
+      - exhort-network
 
-  # redis:
-  #   image: redis:7
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis-data:/data
-  #   networks:
-  #     - exhort-network
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - exhort-network
 
-# networks:
-#   exhort-network:
-#     driver: bridge
+networks:
+  exhort-network:
+    driver: bridge
 
-# volumes:
-#   redis-data:
+volumes:
+  redis-data:
