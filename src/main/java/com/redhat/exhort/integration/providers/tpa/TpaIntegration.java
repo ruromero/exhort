@@ -18,12 +18,17 @@
 
 package com.redhat.exhort.integration.providers.tpa;
 
+import java.time.Duration;
+
 import org.apache.camel.Exchange;
+import org.apache.camel.Message;
 import org.apache.camel.builder.endpoint.EndpointRouteBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.redhat.exhort.integration.Constants;
 import com.redhat.exhort.integration.providers.VulnerabilityProvider;
+
+import io.quarkus.oidc.client.OidcClients;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -34,12 +39,19 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public class TpaIntegration extends EndpointRouteBuilder {
 
+  private static final String TPA_CLIENT_TENANT = "tpa";
+
   @ConfigProperty(name = "api.tpa.timeout", defaultValue = "30s")
   String timeout;
+
+  @ConfigProperty(name = "quarkus.oidc-client.tpa.enabled", defaultValue = "true")
+  boolean tpaEnabled;
 
   @Inject VulnerabilityProvider vulnerabilityProvider;
   @Inject TpaResponseHandler responseHandler;
   @Inject TpaRequestBuilder requestBuilder;
+
+  @Inject OidcClients oidcClients;
 
   @Override
   public void configure() throws Exception {
@@ -116,7 +128,7 @@ public class TpaIntegration extends EndpointRouteBuilder {
   }
 
   private void processRequest(Exchange exchange) {
-    var message = exchange.getMessage();
+    Message message = exchange.getMessage();
     message.removeHeader(Exchange.HTTP_RAW_QUERY);
     message.removeHeader(Exchange.HTTP_QUERY);
     message.removeHeader(Exchange.HTTP_URI);
@@ -125,10 +137,28 @@ public class TpaIntegration extends EndpointRouteBuilder {
     message.setHeader(Exchange.CONTENT_TYPE, MediaType.APPLICATION_JSON);
     message.setHeader(Exchange.HTTP_PATH, Constants.TPA_ANALYZE_PATH);
     message.setHeader(Exchange.HTTP_METHOD, HttpMethod.POST);
+
+    String token = message.getHeader(Constants.TPA_TOKEN_HEADER, String.class);
+    if (token == null && !tpaEnabled) {
+      token = "placeholder";
+    }
+    if (token == null) {
+      token =
+          oidcClients
+              .getClient(TPA_CLIENT_TENANT)
+              .getTokens()
+              .await()
+              .atMost(Duration.parse(timeout))
+              .getAccessToken();
+    }
+    if (token == null) {
+      throw new IllegalStateException("No access token available.");
+    }
+    message.setHeader("Authorization", "Bearer " + token);
   }
 
   private void processHealthRequest(Exchange exchange) {
-    var message = exchange.getMessage();
+    Message message = exchange.getMessage();
     message.removeHeader(Exchange.HTTP_QUERY);
     message.removeHeader(Exchange.HTTP_URI);
     message.removeHeader(Exchange.HTTP_HOST);
@@ -139,7 +169,7 @@ public class TpaIntegration extends EndpointRouteBuilder {
   }
 
   private void processTokenRequest(Exchange exchange) {
-    var message = exchange.getMessage();
+    Message message = exchange.getMessage();
     message.removeHeader(Exchange.HTTP_URI);
     message.removeHeader(Exchange.HTTP_HOST);
     message.removeHeader(Constants.ACCEPT_ENCODING_HEADER);
