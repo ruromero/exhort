@@ -20,4 +20,4 @@ package com.redhat.exhort.integration.modelcard.model;
 
 import java.util.Map;
 
-public record ModelCard(String name, String source, Map<String, Metric> metrics) {}
+public record ModelCard(String name, String source, Map<String, Task> tasks) {}

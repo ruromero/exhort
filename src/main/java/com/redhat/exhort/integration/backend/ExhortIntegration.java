@@ -161,7 +161,10 @@ public class ExhortIntegration extends EndpointRouteBuilder {
         .to("direct:v4validateToken")
       .get("/v4/model-cards/{modelNs}/{modelName}")
         .routeId("restGetModelCard")
-        .to("direct:getModelCard");
+        .to("direct:getModelCard")
+      .get("/v4/model-cards")
+        .routeId("restListModelCards")
+        .to("direct:listModelCards");
 
     from(direct("v3analysis"))
       .routeId("v3Analysis")

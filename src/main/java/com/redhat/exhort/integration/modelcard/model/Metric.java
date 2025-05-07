@@ -18,4 +18,4 @@
 
 package com.redhat.exhort.integration.modelcard.model;
 
-public interface Metric {}
+public record Metric(String name, Double value, Double stderr, Rank rank) {}

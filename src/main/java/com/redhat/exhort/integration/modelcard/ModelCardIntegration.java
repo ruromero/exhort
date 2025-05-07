@@ -19,21 +19,11 @@
 package com.redhat.exhort.integration.modelcard;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.endpoint.EndpointRouteBuilder;
-import org.apache.camel.component.aws2.s3.AWS2S3Constants;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.redhat.exhort.integration.modelcard.model.AccuracyMetric;
-import com.redhat.exhort.integration.modelcard.model.BiasMetric;
-import com.redhat.exhort.integration.modelcard.model.Metric;
-import com.redhat.exhort.integration.modelcard.model.ModelCard;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -44,10 +34,10 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 @ApplicationScoped
 public class ModelCardIntegration extends EndpointRouteBuilder {
 
-  @Inject ObjectMapper mapper;
-
   @ConfigProperty(name = "api.s3.timeout", defaultValue = "20s")
   String timeout;
+
+  @Inject ModelCardService modelCardService;
 
   @Override
   public void configure() {
@@ -59,9 +49,20 @@ public class ModelCardIntegration extends EndpointRouteBuilder {
           .timeoutEnabled(true)
           .timeoutDuration(timeout)
         .end()
-        .setHeader(AWS2S3Constants.KEY, simple("${header.modelNs}/${header.modelName}"))
-        .to("aws2-s3://{{s3.bucket.name}}?operation=getObject&useDefaultCredentialsProvider=true")
-        .process(this::convertToModelCard)
+        .process(this::getModelCard)
+        .marshal().json()
+      .endCircuitBreaker()
+      .onFallback()
+        .process(this::processResponseError);
+
+    from(direct("listModelCards"))
+      .routeId("listModelCards")
+      .circuitBreaker()
+        .faultToleranceConfiguration()
+          .timeoutEnabled(true)
+          .timeoutDuration(timeout)
+        .end()
+        .process(this::listModelCards)
         .marshal().json()
       .endCircuitBreaker()
       .onFallback()
@@ -69,28 +70,14 @@ public class ModelCardIntegration extends EndpointRouteBuilder {
     // fmt:on
   }
 
-  private void convertToModelCard(Exchange exchange) {
-    var response = exchange.getIn().getBody(InputStream.class);
+  private void getModelCard(Exchange exchange) {
+
     try {
-      var modelCard = mapper.readTree(response);
-      var name = modelCard.get("model_name").asText();
-      var source = modelCard.get("model_source").asText();
-      var results = modelCard.get("results");
-      Map<String, Metric> metrics = new HashMap<>();
-      results
-          .fields()
-          .forEachRemaining(
-              task -> {
-                var taskName = task.getKey();
-                var taskResults = task.getValue();
-                if (taskResults.has("likelihood_diff,none")) {
-                  metrics.put(taskName, new BiasMetric(taskName, taskResults));
-                } else {
-                  metrics.put(taskName, new AccuracyMetric(taskName, taskResults));
-                }
-              });
-      var card = new ModelCard(name, source, metrics);
-      exchange.getIn().setBody(card);
+      var modelCard =
+          modelCardService.getModelCard(
+              exchange.getIn().getHeader("modelNs", String.class),
+              exchange.getIn().getHeader("modelName", String.class));
+      exchange.getIn().setBody(modelCard);
       exchange.getIn().setHeader(Exchange.HTTP_RESPONSE_CODE, Response.Status.OK.getStatusCode());
       exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
     } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
@@ -104,6 +91,21 @@ public class ModelCardIntegration extends EndpointRouteBuilder {
           .setHeader(
               Exchange.HTTP_RESPONSE_CODE, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
       exchange.getIn().setBody("Error reading model card: " + ex.getMessage());
+    }
+  }
+
+  private void listModelCards(Exchange exchange) {
+    try {
+      var modelCards = modelCardService.listModelCards();
+      exchange.getIn().setBody(modelCards);
+      exchange.getIn().setHeader(Exchange.HTTP_RESPONSE_CODE, Response.Status.OK.getStatusCode());
+      exchange.getIn().setHeader(Exchange.CONTENT_TYPE, "application/json");
+    } catch (S3Exception ex) {
+      exchange
+          .getIn()
+          .setHeader(
+              Exchange.HTTP_RESPONSE_CODE, Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+      exchange.getIn().setBody("Error listing model cards: " + ex.getMessage());
     }
   }
 

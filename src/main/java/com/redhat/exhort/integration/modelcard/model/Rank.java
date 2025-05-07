@@ -18,16 +18,6 @@
 
 package com.redhat.exhort.integration.modelcard.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-public class AccuracyMetric implements Metric {
-  public final String name;
-  public final Double accuracy;
-  public final Double accuracyStderr;
-
-  public AccuracyMetric(String name, JsonNode results) {
-    this.name = name;
-    this.accuracy = results.get("acc,none").asDouble();
-    this.accuracyStderr = results.get("acc_stderr,none").asDouble();
-  }
+public record Rank(int position, int total) {
+  public static final Rank UNKNOWN = new Rank(0, 0);
 }

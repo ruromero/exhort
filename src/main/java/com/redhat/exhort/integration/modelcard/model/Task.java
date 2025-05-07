@@ -18,20 +18,6 @@
 
 package com.redhat.exhort.integration.modelcard.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
 
-public class BiasMetric implements Metric {
-  public final String name;
-  public final Double likelihood;
-  public final Double likelihoodStderr;
-  public final Double pctStereotype;
-  public final Double pctStereotypeStderr;
-
-  public BiasMetric(String name, JsonNode results) {
-    this.name = name;
-    this.likelihood = results.get("likelihood_diff,none").asDouble();
-    this.likelihoodStderr = results.get("likelihood_diff_stderr,none").asDouble();
-    this.pctStereotype = results.get("pct_stereotype,none").asDouble();
-    this.pctStereotypeStderr = results.get("pct_stereotype_stderr,none").asDouble();
-  }
-}
+public record Task(String name, Map<String, Metric> metrics) {}
