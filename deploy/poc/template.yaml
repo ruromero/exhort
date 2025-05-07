@@ -183,6 +183,16 @@ objects:
       selector:
         app: '${APP_NAME}'
         service: redis
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: redis-data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
   - kind: Deployment
     apiVersion: apps/v1
     metadata:
@@ -209,8 +219,15 @@ objects:
               securityContext:
                 runAsNonRoot: true
               imagePullPolicy: Always
+              volumeMounts:
+                - name: redis-data
+                  mountPath: /data
           restartPolicy: Always
           serviceAccountName: '${SERVICE_ACCOUNT_NAME}'
+          volumes:
+            - name: redis-data
+              persistentVolumeClaim:
+                claimName: redis-data
 parameters:
   - name: APP_NAME
     displayName: Application name
