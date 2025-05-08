@@ -18,4 +18,10 @@
 
 package com.redhat.exhort.integration.modelcard.model;
 
-public record Metric(String name, Double value, Double stderr, Rank rank, Level level) {}
+public record Level(
+    String name,
+    String interpretation,
+    Double lowThreshold,
+    Double highThreshold,
+    Integer category,
+    Integer totalCategories) {}

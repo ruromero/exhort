@@ -18,4 +18,6 @@
 
 package com.redhat.exhort.integration.modelcard.model;
 
-public record Metric(String name, Double value, Double stderr, Rank rank, Level level) {}
+import java.util.List;
+
+public record Threshold(String task, List<String> metrics, List<ThresholdLevel> levels) {}

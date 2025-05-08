@@ -19,7 +19,10 @@
 package com.redhat.exhort.integration.modelcard;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -29,11 +32,15 @@ import org.apache.camel.Header;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.redhat.exhort.integration.modelcard.model.Level;
 import com.redhat.exhort.integration.modelcard.model.Metric;
 import com.redhat.exhort.integration.modelcard.model.ModelCard;
 import com.redhat.exhort.integration.modelcard.model.Rank;
 import com.redhat.exhort.integration.modelcard.model.Task;
+import com.redhat.exhort.integration.modelcard.model.Threshold;
 
 import io.quarkus.runtime.Startup;
 
@@ -47,6 +54,7 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 public class ModelCardService {
 
   private static final Logger LOGGER = Logger.getLogger(ModelCardService.class);
+
   @Inject S3Client s3Client;
 
   @Inject ObjectMapper mapper;
@@ -56,20 +64,25 @@ public class ModelCardService {
   String s3BucketName;
 
   Map<String, TreeMap<Double, String>> rankings = new HashMap<>();
-
-  private static final Set<String> POSITIVE_METRICS =
-      Set.of("acc", "acc_norm", "accuracy_amb", "accuracy_disamb");
+  List<Threshold> thresholds = new ArrayList<>();
 
   public Set<String> listModelCards() {
     var response = s3Client.listObjectsV2(builder -> builder.bucket(s3BucketName).build());
     return response.contents().stream()
         .map(S3Object::key)
-        .filter(key -> !key.endsWith("/")) // Filter out folder entries
+        // Filter out root configuration files and folder entries
+        .filter(key -> key.contains("/") && !key.endsWith("/"))
+        .map(key -> key.replace(".json", ""))
         .collect(Collectors.toSet());
   }
 
   @Startup
-  void loadRankings() {
+  void load() {
+    loadRankings();
+    loadThresholds();
+  }
+
+  private void loadRankings() {
     listModelCards().stream()
         .forEach(
             cardName -> {
@@ -95,6 +108,18 @@ public class ModelCardService {
             });
   }
 
+  private void loadThresholds() {
+    try {
+      var response =
+          s3Client.getObject(
+              GetObjectRequest.builder().bucket(s3BucketName).key("thresholds.json").build());
+      thresholds =
+          mapper.readValue(response.readAllBytes(), new TypeReference<List<Threshold>>() {});
+    } catch (IOException e) {
+      LOGGER.error("Failed to load thresholds.json", e);
+    }
+  }
+
   public ModelCard getModelCard(
       @Header("modelNs") String modelNs, @Header("modelName") String modelName) throws IOException {
     var response =
@@ -104,6 +129,7 @@ public class ModelCardService {
     var name = modelCard.get("model_name").asText();
     var source = modelCard.get("model_source").asText();
     var results = modelCard.get("results");
+    var higherIsBetterMetrics = getHigherIsBetterMetrics(modelCard);
     Map<String, Task> tasks = new HashMap<>();
     results
         .fields()
@@ -125,13 +151,12 @@ public class ModelCardService {
                           if (taskResults.has(stdErrKey)) {
                             stdErrValue = taskResults.get(stdErrKey).asDouble();
                           }
+                          var rank =
+                              getRank(taskName, metricName, metricValue, higherIsBetterMetrics);
+                          var level = getLevel(taskName, metricName, metricValue);
                           metrics.put(
                               metricName,
-                              new Metric(
-                                  metricName,
-                                  metricValue,
-                                  stdErrValue,
-                                  getRank(taskName, metricName, metricValue)));
+                              new Metric(metricName, metricValue, stdErrValue, rank, level));
                         }
                       });
               tasks.put(taskName, new Task(taskName, metrics));
@@ -139,14 +164,19 @@ public class ModelCardService {
     return new ModelCard(name, source, tasks);
   }
 
-  private Rank getRank(String task, String metric, double metricValue) {
+  private Rank getRank(
+      String task,
+      String metric,
+      double metricValue,
+      Map<String, Set<String>> higherIsBetterMetrics) {
     var key = task + "/" + metric;
     if (!rankings.containsKey(key)) {
       return Rank.UNKNOWN;
     }
-    var isPositive = POSITIVE_METRICS.contains(metric);
     var taskRank = 1;
-    var values = isPositive ? rankings.get(key).keySet() : rankings.get(key).descendingKeySet();
+    var higherIsBetter =
+        higherIsBetterMetrics.containsKey(task) && higherIsBetterMetrics.get(task).contains(metric);
+    var values = higherIsBetter ? rankings.get(key).keySet() : rankings.get(key).descendingKeySet();
 
     for (var value : values) {
       var compare = value.compareTo(metricValue);
@@ -156,5 +186,69 @@ public class ModelCardService {
       taskRank++;
     }
     return new Rank(taskRank, rankings.get(key).size());
+  }
+
+  private Level getLevel(String task, String metric, double metricValue) {
+    var threshold =
+        thresholds.stream()
+            .filter(
+                t ->
+                    (t.task() == null || t.task().equals(task))
+                        && t.metrics().stream().anyMatch(m -> metric.startsWith(m)))
+            .findFirst()
+            .orElse(null);
+
+    if (threshold == null) {
+      return null;
+    }
+
+    return threshold.levels().stream()
+        .filter(
+            level -> {
+              if (level.lowThreshold() != null && level.highThreshold() != null) {
+                return metricValue >= level.lowThreshold() && metricValue < level.highThreshold();
+              } else if (level.lowThreshold() != null) {
+                return metricValue >= level.lowThreshold();
+              } else if (level.highThreshold() != null) {
+                return metricValue < level.highThreshold();
+              }
+              return false;
+            })
+        .map(
+            level ->
+                new Level(
+                    level.name(),
+                    level.interpretation(),
+                    level.lowThreshold(),
+                    level.highThreshold(),
+                    level.category(),
+                    threshold.levels().size()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private Map<String, Set<String>> getHigherIsBetterMetrics(JsonNode modelCard) {
+    var higherIsBetter = new HashMap<String, Set<String>>();
+    modelCard
+        .get("higher_is_better")
+        .fields()
+        .forEachRemaining(
+            task -> {
+              var taskName = task.getKey();
+              var taskResults = task.getValue();
+              taskResults
+                  .fields()
+                  .forEachRemaining(
+                      metric -> {
+                        var metricName = metric.getKey();
+                        var isBetter = metric.getValue().asBoolean();
+                        if (isBetter) {
+                          higherIsBetter
+                              .computeIfAbsent(taskName, k -> new HashSet<>())
+                              .add(metricName);
+                        }
+                      });
+            });
+    return higherIsBetter;
   }
 }

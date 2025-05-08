@@ -18,4 +18,11 @@
 
 package com.redhat.exhort.integration.modelcard.model;
 
-public record Metric(String name, Double value, Double stderr, Rank rank, Level level) {}
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record ThresholdLevel(
+    @JsonProperty("low_threshold") Double lowThreshold,
+    @JsonProperty("high_threshold") Double highThreshold,
+    String name,
+    String interpretation,
+    Integer category) {}
