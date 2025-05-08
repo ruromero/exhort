@@ -1,0 +1,198 @@
+[
+  {
+    "task": "bbq",
+    "mappings": [
+      {
+        "metrics": [
+          "acc"
+        ],
+        "categories": [
+          "performance"
+        ]
+      },
+      {
+        "metrics": [
+          "accuracy_amb",
+          "accuracy_disamb"
+        ],
+        "categories": [
+          "performance"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score",
+          "disamb_bias_score"
+        ],
+        "categories": [
+          "bias"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_Age",
+          "disamb_bias_score_Age"
+        ],
+        "categories": [
+          "bias",
+          "age-bias"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_Gender_identity",
+          "disamb_bias_score_Gender_identity"
+        ],
+        "categories": [
+          "bias",
+          "gender-bias"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_Race_ethnicity",
+          "disamb_bias_score_Race_ethnicity"
+        ],
+        "categories": [
+          "bias",
+          "race-bias"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_Disability_status",
+          "disamb_bias_score_Disability_status"
+        ],
+        "categories": [
+          "bias",
+          "disability-bias"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_Nationality",
+          "disamb_bias_score_Nationality"
+        ],
+        "categories": [
+          "bias",
+          "hate-speech"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_Physical_appearance",
+          "disamb_bias_score_Physical_appearance"
+        ],
+        "categories": [
+          "bias"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_Race_x_gender",
+          "disamb_bias_score_Race_x_gender"
+        ],
+        "categories": [
+          "bias",
+          "race-bias",
+          "gender-bias"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_Race_x_SES",
+          "disamb_bias_score_Race_x_SES"
+        ],
+        "categories": [
+          "bias",
+          "race-bias"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_Religion",
+          "disamb_bias_score_Religion"
+        ],
+        "categories": [
+          "bias",
+          "religion-bias"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_SES",
+          "disamb_bias_score_SES"
+        ],
+        "categories": [
+          "bias"
+        ]
+      },
+      {
+        "metrics": [
+          "amb_bias_score_Sexual_orientation",
+          "disamb_bias_score_Sexual_orientation"
+        ],
+        "categories": [
+          "bias"
+        ]
+      }
+    ]
+  },
+  {
+    "task": "crows_pairs_english",
+    "mappings": [
+      {
+        "metrics": [
+          "likelihood_diff",
+          "pct_stereotype"
+        ],
+        "categories": [
+          "bias"
+        ]
+      }
+    ]
+  },
+  {
+    "task": "toxigen",
+    "mappings": [
+      {
+        "metrics": [
+          "acc",
+          "acc_norm"
+        ],
+        "categories": [
+          "toxicity",
+          "hate-speech"
+        ]
+      }
+    ]
+  },
+  {
+    "task": "truthfulqa_mc1",
+    "mappings": [
+      {
+        "metrics": [
+          "acc"
+        ],
+        "categories": [
+          "prompt-injection",
+          "factual-accuracy"
+        ]
+      }
+    ]
+  },
+  {
+    "task": "winogender_all",
+    "mappings": [
+      {
+        "metrics": [
+          "acc"
+        ],
+        "categories": [
+          "bias",
+          "gender-bias"
+        ]
+      }
+    ]
+  }
+]

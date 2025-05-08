@@ -1,0 +1,176 @@
+[
+  {
+    "name": "Llama-Guard-3-8B",
+    "description": "Llama Guard 3 is a Llama-3.1-8B pretrained model, fine-tuned for content safety classification. Similar to previous versions, it can be used to classify content in both LLM inputs (prompt classification) and in LLM responses (response classification)",
+    "docRef": "https://huggingface.co/meta-llama/Llama-Guard-3-8B",
+    "input": true,
+    "output": true,
+    "categories": [
+      "toxicity",
+      "violence",
+      "bias",
+      "self-harm",
+      "prompt-injection"
+    ],
+    "markdown": "## Llama Guard 3 Usage Guide\n\n### Setup\n```python\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\n# Load model and tokenizer\ntokenizer = AutoTokenizer.from_pretrained('meta-llama/Llama-Guard-3-8B')\nmodel = AutoModelForCausalLM.from_pretrained('meta-llama/Llama-Guard-3-8B')\n```\n\n### Basic Usage\n```python\ndef check_content(text, is_input=True):\n    # Format prompt based on whether it's input or output\n    prompt = f\"<s>[INST] {text} [/INST]\" if is_input else f\"<s>[INST] {text} [/INST]\"\n    \n    # Tokenize and get model output\n    inputs = tokenizer(prompt, return_tensors='pt')\n    outputs = model.generate(**inputs, max_length=100)\n    \n    # Parse response\n    response = tokenizer.decode(outputs[0], skip_special_tokens=True)\n    return response\n```\n\n### Integration Example\n```python\ndef safe_llm_call(prompt, llm_model):\n    # Check input safety\n    input_check = check_content(prompt, is_input=True)\n    if 'unsafe' in input_check.lower():\n        return 'Input rejected: Content safety violation'\n    \n    # Get LLM response\n    response = llm_model.generate(prompt)\n    \n    # Check output safety\n    output_check = check_content(response, is_input=False)\n    if 'unsafe' in output_check.lower():\n        return 'Output rejected: Content safety violation'\n    \n    return response\n```\n\n### Important Notes\n- Model requires significant GPU memory (8GB+ recommended)\n- Consider batching requests for better performance\n- Monitor false positives/negatives in your specific use case\n- Regular model updates recommended for latest safety patterns"
+  },
+  {
+    "name": "Perspective-API",
+    "description": "Google's Perspective API for toxicity and bias detection",
+    "docRef": "https://developers.perspectiveapi.com/",
+    "input": true,
+    "output": true,
+    "categories": [
+      "toxicity",
+      "severe_toxicity",
+      "identity_attack",
+      "insult",
+      "profanity",
+      "threat",
+      "sexually_explicit",
+      "flirtation"
+    ],
+    "markdown": "## Perspective API Usage Guide\n\n### Setup\n```python\nfrom googleapiclient import discovery\nimport json\n\n# Initialize the API client\nAPI_KEY = 'your-api-key'\nclient = discovery.build(\n    'commentanalyzer',\n    'v1alpha1',\n    developerKey=API_KEY,\n    discoveryServiceUrl='https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1'\n)\n```\n\n### Basic Usage\n```python\ndef analyze_text(text):\n    analyze_request = {\n        'comment': {'text': text},\n        'requestedAttributes': {\n            'TOXICITY': {},\n            'SEVERE_TOXICITY': {},\n            'IDENTITY_ATTACK': {},\n            'INSULT': {},\n            'PROFANITY': {},\n            'THREAT': {},\n            'SEXUALLY_EXPLICIT': {},\n            'FLIRTATION': {}\n        }\n    }\n    \n    response = client.comments().analyze(body=analyze_request).execute()\n    return response\n```\n\n### Integration Example\n```python\ndef moderate_content(text, threshold=0.7):\n    scores = analyze_text(text)\n    \n    # Check if any attribute exceeds threshold\n    for attribute, score in scores['attributeScores'].items():\n        if score['summaryScore']['value'] > threshold:\n            return False, f'Content flagged for {attribute}'\n    \n    return True, 'Content passed moderation'\n```\n\n### Important Notes\n- Requires Google Cloud account and API key\n- Free tier available with rate limits\n- Consider caching results for frequently checked content\n- Adjust thresholds based on your use case\n- Monitor API usage and costs"
+  },
+  {
+    "name": "NeMo-Guardrails",
+    "description": "NVIDIA's NeMo Guardrails for LLM safety and control",
+    "docRef": "https://github.com/NVIDIA/NeMo-Guardrails",
+    "input": true,
+    "output": true,
+    "categories": [
+      "toxicity",
+      "bias",
+      "prompt-injection",
+      "hallucination",
+      "factual-accuracy"
+    ],
+    "markdown": "## NeMo Guardrails Usage Guide\n\n### Setup\n```bash\npip install nemoguardrails\n```\n\n### Basic Configuration\n```python\nfrom nemoguardrails import LLMRails\n\n# Initialize rails\nrails = LLMRails.from_config(\n    config_path='config.yml',\n    model='gpt-3.5-turbo'  # or your preferred model\n)\n```\n\n### Example Config\n```yaml\n# config.yml\nmodels:\n  - type: main\n    engine: openai\n    model: gpt-3.5-turbo\n\nrails:\n  input:\n    flows:\n      - self check input\n  output:\n    flows:\n      - self check output\n      - fact check\n      - hallucination check\n```\n\n### Usage Example\n```python\n# Process input\nresponse = rails.generate(\n    prompt='User input here',\n    temperature=0.7\n)\n\n# Check if response passed all guardrails\nif response.passed_guardrails:\n    print(response.content)\nelse:\n    print('Response blocked by guardrails')\n```\n\n### Important Notes\n- Supports multiple LLM backends\n- Custom guardrails can be defined in YAML\n- Consider using Colang for complex guardrail logic\n- Monitor performance impact on response times\n- Regular updates recommended for latest safety patterns"
+  },
+  {
+    "name": "Azure-Content-Safety",
+    "description": "Microsoft's Azure Content Safety for content moderation",
+    "docRef": "https://learn.microsoft.com/en-us/azure/cognitive-services/content-safety/",
+    "input": true,
+    "output": true,
+    "categories": [
+      "hate",
+      "self-harm",
+      "sexual",
+      "violence"
+    ],
+    "markdown": "## Azure Content Safety Usage Guide\n\n### Setup\n```python\nfrom azure.ai.contentsafety import ContentSafetyClient\nfrom azure.core.credentials import AzureKeyCredential\n\n# Initialize client\nendpoint = 'your-endpoint'\nkey = 'your-key'\nclient = ContentSafetyClient(endpoint=endpoint, credential=AzureKeyCredential(key))\n```\n\n### Basic Usage\n```python\ndef analyze_content(text):\n    # Analyze text\n    result = client.analyze_text(\n        text=text,\n        categories=['Hate', 'SelfHarm', 'Sexual', 'Violence']\n    )\n    \n    return result\n```\n\n### Integration Example\n```python\ndef moderate_content(text, threshold=0.7):\n    result = analyze_content(text)\n    \n    # Check categories\n    for category in result.categories_analysis:\n        if category.severity > threshold:\n            return False, f'Content flagged for {category.category}'\n    \n    return True, 'Content passed moderation'\n```\n\n### Important Notes\n- Requires Azure subscription and API key\n- Supports text and image analysis\n- Consider using async methods for better performance\n- Monitor API usage and costs\n- Regular updates for latest safety patterns"
+  },
+  {
+    "name": "Detoxify",
+    "description": "Unitary's Detoxify for toxicity classification",
+    "docRef": "https://github.com/unitaryai/detoxify",
+    "input": true,
+    "output": true,
+    "categories": [
+      "toxicity",
+      "severe_toxicity",
+      "obscene",
+      "threat",
+      "insult",
+      "identity_hate"
+    ],
+    "markdown": "## Detoxify Usage Guide\n\n### Setup\n```bash\npip install detoxify\n```\n\n### Basic Usage\n```python\nfrom detoxify import Detoxify\n\n# Initialize model\nmodel = Detoxify('original')\n```\n\n### Usage Example\n```python\ndef check_toxicity(text):\n    # Get predictions\n    results = model.predict(text)\n    \n    # Process results\n    for category, score in results.items():\n        if score > 0.7:  # threshold\n            return False, f'Content flagged for {category}'\n    \n    return True, 'Content passed toxicity check'\n```\n\n### Integration Example\n```python\ndef safe_text_processing(text):\n    # Check toxicity\n    is_safe, message = check_toxicity(text)\n    if not is_safe:\n        return message\n    \n    # Process text further\n    return process_text(text)\n```\n\n### Important Notes\n- Lightweight and easy to deploy\n- No API key required\n- Consider model updates for latest patterns\n- Monitor false positives/negatives\n- Can be used offline"
+  },
+  {
+    "name": "Factual-Consistency-Evaluator",
+    "description": "Google's Factual Consistency Evaluator for detecting hallucinations and factual inconsistencies",
+    "docRef": "https://github.com/google-research/factual-consistency-evaluator",
+    "input": false,
+    "output": true,
+    "categories": [
+      "hallucination",
+      "factual-accuracy"
+    ],
+    "markdown": "## Factual Consistency Evaluator Usage Guide\n\n### Setup\n```bash\npip install factual-consistency-evaluator\n```\n\n### Basic Usage\n```python\nfrom factual_consistency import FactualConsistencyEvaluator\n\n# Initialize evaluator\nevaluator = FactualConsistencyEvaluator()\n```\n\n### Usage Example\n```python\ndef check_factual_consistency(claim, context):\n    # Evaluate factual consistency\n    score = evaluator.evaluate(claim, context)\n    \n    if score < 0.7:  # threshold\n        return False, 'Potential factual inconsistency detected'\n    \n    return True, 'Content is factually consistent'\n```\n\n### Integration Example\n```python\ndef verify_llm_response(response, context):\n    # Check factual consistency\n    is_consistent, message = check_factual_consistency(response, context)\n    if not is_consistent:\n        return f'Warning: {message}'\n    \n    return response\n```\n\n### Important Notes\n- Requires context for evaluation\n- Consider using with retrieval systems\n- Monitor evaluation time\n- Regular updates recommended\n- Can be computationally intensive"
+  },
+  {
+    "name": "HuggingFace-Toxicity",
+    "description": "HuggingFace's toxicity classifier based on RoBERTa",
+    "docRef": "https://huggingface.co/facebook/roberta-hate-speech-dynabench-r4-target",
+    "input": true,
+    "output": true,
+    "categories": [
+      "toxicity",
+      "hate-speech"
+    ],
+    "markdown": "## HuggingFace Toxicity Classifier Usage Guide\n\n### Setup\n```python\nfrom transformers import pipeline\n\n# Initialize classifier\nclassifier = pipeline(\n    'text-classification',\n    model='facebook/roberta-hate-speech-dynabench-r4-target'\n)\n```\n\n### Basic Usage\n```python\ndef classify_toxicity(text):\n    # Get classification\n    result = classifier(text)[0]\n    \n    return result['label'], result['score']\n```\n\n### Integration Example\n```python\ndef moderate_content(text, threshold=0.7):\n    label, score = classify_toxicity(text)\n    \n    if label == 'hate' and score > threshold:\n        return False, 'Content flagged as hate speech'\n    \n    return True, 'Content passed moderation'\n```\n\n### Important Notes\n- Easy to integrate with HuggingFace ecosystem\n- No API key required\n- Consider model updates\n- Monitor false positives/negatives\n- Can be used offline"
+  },
+  {
+    "name": "Bias-Detection-Toolkit",
+    "description": "Microsoft's toolkit for detecting various types of bias in text",
+    "docRef": "https://github.com/microsoft/bias-detection-toolkit",
+    "input": true,
+    "output": true,
+    "categories": [
+      "gender-bias",
+      "race-bias",
+      "age-bias",
+      "religion-bias",
+      "disability-bias"
+    ],
+    "markdown": "## Bias Detection Toolkit Usage Guide\n\n### Setup\n```bash\npip install bias-detection-toolkit\n```\n\n### Basic Usage\n```python\nfrom bias_detection import BiasDetector\n\n# Initialize detector\ndetector = BiasDetector()\n```\n\n### Usage Example\n```python\ndef check_bias(text):\n    # Detect bias\n    results = detector.detect(text)\n    \n    # Process results\n    for bias_type, score in results.items():\n        if score > 0.7:  # threshold\n            return False, f'Content flagged for {bias_type} bias'\n    \n    return True, 'Content passed bias check'\n```\n\n### Integration Example\n```python\ndef bias_aware_processing(text):\n    # Check for bias\n    is_unbiased, message = check_bias(text)\n    if not is_unbiased:\n        return f'Warning: {message}'\n    \n    # Process text further\n    return process_text(text)\n```\n\n### Important Notes\n- Supports multiple bias types\n- Regular updates recommended\n- Consider context in bias detection\n- Monitor false positives/negatives\n- Can be used offline"
+  },
+  {
+    "name": "FEVER",
+    "description": "Fact Extraction and Verification system for checking factual accuracy",
+    "docRef": "https://fever.ai/",
+    "input": false,
+    "output": true,
+    "categories": [
+      "factual-accuracy",
+      "hallucination"
+    ],
+    "markdown": "## FEVER Usage Guide\n\n### Setup\n```bash\npip install fever-ai\n```\n\n### Basic Usage\n```python\nfrom fever import FEVER\n\n# Initialize FEVER\nfever = FEVER()\n```\n\n### Usage Example\n```python\ndef verify_claim(claim, evidence):\n    # Verify claim against evidence\n    result = fever.verify(claim, evidence)\n    \n    if result['label'] == 'REFUTES':\n        return False, 'Claim refuted by evidence'\n    elif result['label'] == 'NOT_ENOUGH_INFO':\n        return False, 'Insufficient evidence'\n    \n    return True, 'Claim supported by evidence'\n```\n\n### Integration Example\n```python\ndef fact_check_response(response, knowledge_base):\n    # Extract claims\n    claims = extract_claims(response)\n    \n    # Verify each claim\n    for claim in claims:\n        is_verified, message = verify_claim(claim, knowledge_base)\n        if not is_verified:\n            return f'Warning: {message}'\n    \n    return response\n```\n\n### Important Notes\n- Requires evidence/knowledge base\n- Consider using with retrieval systems\n- Monitor verification time\n- Regular updates recommended\n- Can be computationally intensive"
+  },
+  {
+    "name": "HuggingFace-Bias",
+    "description": "HuggingFace's bias classifier for detecting various types of bias",
+    "docRef": "https://huggingface.co/facebook/roberta-hate-speech-dynabench-r4-target",
+    "input": true,
+    "output": true,
+    "categories": [
+      "gender-bias",
+      "race-bias",
+      "religion-bias",
+      "age-bias"
+    ],
+    "markdown": "## HuggingFace Bias Classifier Usage Guide\n\n### Setup\n```python\nfrom transformers import pipeline\n\n# Initialize classifier\nclassifier = pipeline(\n    'text-classification',\n    model='facebook/roberta-hate-speech-dynabench-r4-target'\n)\n```\n\n### Basic Usage\n```python\ndef detect_bias(text):\n    # Get classification\n    result = classifier(text)[0]\n    \n    return result['label'], result['score']\n```\n\n### Integration Example\n```python\ndef bias_aware_processing(text, threshold=0.7):\n    label, score = detect_bias(text)\n    \n    if score > threshold:\n        return False, f'Content flagged for {label} bias'\n    \n    return True, 'Content passed bias check'\n```\n\n### Important Notes\n- Easy to integrate with HuggingFace ecosystem\n- No API key required\n- Consider model updates\n- Monitor false positives/negatives\n- Can be used offline"
+  },
+  {
+    "name": "OpenAI-Moderation",
+    "description": "OpenAI's content moderation API for detecting harmful content",
+    "docRef": "https://platform.openai.com/docs/guides/moderation",
+    "input": true,
+    "output": true,
+    "categories": [
+      "hate",
+      "hate/threatening",
+      "self-harm",
+      "sexual",
+      "sexual/minors",
+      "violence",
+      "violence/graphic"
+    ],
+    "markdown": "## OpenAI Moderation Usage Guide\n\n### Setup\n```python\nimport openai\n\n# Set API key\nopenai.api_key = 'your-api-key'\n```\n\n### Basic Usage\n```python\ndef moderate_content(text):\n    # Call moderation API\n    response = openai.Moderation.create(input=text)\n    \n    return response['results'][0]\n```\n\n### Integration Example\n```python\ndef safe_text_processing(text):\n    # Check content\n    result = moderate_content(text)\n    \n    # Check categories\n    for category, flagged in result['categories'].items():\n        if flagged:\n            return False, f'Content flagged for {category}'\n    \n    return True, 'Content passed moderation'\n```\n\n### Important Notes\n- Requires OpenAI API key\n- Consider rate limits and costs\n- Regular updates for latest patterns\n- Monitor API usage\n- Consider caching results"
+  },
+  {
+    "name": "Amazon-Comprehend",
+    "description": "Amazon's NLP service for content moderation and safety",
+    "docRef": "https://aws.amazon.com/comprehend/",
+    "input": true,
+    "output": true,
+    "categories": [
+      "toxicity",
+      "hate-speech",
+      "violence",
+      "sexual-content"
+    ],
+    "markdown": "## Amazon Comprehend Usage Guide\n\n### Setup\n```python\nimport boto3\n\n# Initialize client\ncomprehend = boto3.client('comprehend')\n```\n\n### Basic Usage\n```python\ndef analyze_content(text):\n    # Detect toxic content\n    response = comprehend.detect_toxic_content(\n        TextSegments=[{'Text': text}]\n    )\n    \n    return response['ResultList'][0]\n```\n\n### Integration Example\n```python\ndef moderate_content(text, threshold=0.7):\n    result = analyze_content(text)\n    \n    # Check categories\n    for category in result['Labels']:\n        if category['Score'] > threshold:\n            return False, f'Content flagged for {category[\"Name\"]}'\n    \n    return True, 'Content passed moderation'\n```\n\n### Important Notes\n- Requires AWS account and credentials\n- Consider costs and rate limits\n- Supports multiple languages\n- Monitor API usage\n- Consider caching results"
+  }
+]

@@ -35,11 +35,14 @@ import org.jboss.logging.Logger;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.redhat.exhort.integration.modelcard.model.Guardrail;
 import com.redhat.exhort.integration.modelcard.model.Level;
 import com.redhat.exhort.integration.modelcard.model.Metric;
 import com.redhat.exhort.integration.modelcard.model.ModelCard;
 import com.redhat.exhort.integration.modelcard.model.Rank;
+import com.redhat.exhort.integration.modelcard.model.Recommendation;
 import com.redhat.exhort.integration.modelcard.model.Task;
+import com.redhat.exhort.integration.modelcard.model.TaskMapping;
 import com.redhat.exhort.integration.modelcard.model.Threshold;
 
 import io.quarkus.runtime.Startup;
@@ -55,6 +58,9 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 public class ModelCardService {
 
   private static final Logger LOGGER = Logger.getLogger(ModelCardService.class);
+  private static final String THRESHOLDS_FILE = "thresholds.json";
+  private static final String GUARDRAILS_FILE = "guardrails.json";
+  private static final String TASK_MAPPINGS_FILE = "task-mappings.json";
 
   @Inject S3Client s3Client;
 
@@ -66,6 +72,8 @@ public class ModelCardService {
 
   Map<String, TreeMap<Double, String>> rankings = new HashMap<>();
   List<Threshold> thresholds = new ArrayList<>();
+  Map<String, Guardrail> guardrails = new HashMap<>();
+  Map<String, TaskMapping> taskMappings = new HashMap<>();
 
   public Set<String> listModelCards() {
     var response = s3Client.listObjectsV2(builder -> builder.bucket(s3BucketName).build());
@@ -80,7 +88,7 @@ public class ModelCardService {
   @Startup
   void load() {
     loadRankings();
-    loadThresholds();
+    reloadConfigFiles();
   }
 
   private void loadRankings() {
@@ -109,17 +117,82 @@ public class ModelCardService {
             });
   }
 
-  @Scheduled(every = "1m")
-  void loadThresholds() {
+  @Scheduled(every = "10m")
+  void reloadConfigFiles() {
+    loadThresholds();
+    loadGuardrails();
+    loadTaskMappings();
+  }
+
+  private void loadThresholds() {
     try {
       var response =
           s3Client.getObject(
-              GetObjectRequest.builder().bucket(s3BucketName).key("thresholds.json").build());
+              GetObjectRequest.builder().bucket(s3BucketName).key(THRESHOLDS_FILE).build());
       thresholds =
           mapper.readValue(response.readAllBytes(), new TypeReference<List<Threshold>>() {});
     } catch (IOException e) {
-      LOGGER.error("Failed to load thresholds.json", e);
+      LOGGER.error("Failed to load " + THRESHOLDS_FILE, e);
     }
+  }
+
+  private void loadGuardrails() {
+    try {
+      var response =
+          s3Client.getObject(
+              GetObjectRequest.builder().bucket(s3BucketName).key(GUARDRAILS_FILE).build());
+      List<Guardrail> guardrailList =
+          mapper.readValue(response.readAllBytes(), new TypeReference<List<Guardrail>>() {});
+      guardrails =
+          guardrailList.stream().collect(Collectors.toMap(Guardrail::name, guardrail -> guardrail));
+    } catch (IOException e) {
+      LOGGER.error("Failed to load " + GUARDRAILS_FILE, e);
+    }
+  }
+
+  private void loadTaskMappings() {
+    try {
+      var response =
+          s3Client.getObject(
+              GetObjectRequest.builder().bucket(s3BucketName).key(TASK_MAPPINGS_FILE).build());
+      List<TaskMapping> mappings =
+          mapper.readValue(response.readAllBytes(), new TypeReference<List<TaskMapping>>() {});
+      taskMappings =
+          mappings.stream().collect(Collectors.toMap(TaskMapping::task, mapping -> mapping));
+    } catch (IOException e) {
+      LOGGER.error("Failed to load " + TASK_MAPPINGS_FILE, e);
+    }
+  }
+
+  private void addRecommendation(
+      String taskName,
+      String metricName,
+      Level level,
+      Map<String, Recommendation> recommendations) {
+    if (level == null || !taskMappings.containsKey(taskName)) {
+      return;
+    }
+
+    taskMappings.get(taskName).mappings().stream()
+        .filter(mapping -> mapping.metrics().contains(metricName))
+        .filter(mapping -> (level.category() * 100.0 / level.totalCategories()) < 50)
+        .forEach(
+            mapping ->
+                mapping
+                    .categories()
+                    .forEach(
+                        category ->
+                            guardrails.values().stream()
+                                .filter(g -> g.categories().contains(category))
+                                .forEach(
+                                    g -> {
+                                      var recommendation = recommendations.get(g.name());
+                                      if (recommendation == null) {
+                                        recommendation = new Recommendation(new HashSet<>(), g);
+                                        recommendations.put(g.name(), recommendation);
+                                      }
+                                      recommendation.categories().add(category);
+                                    })));
   }
 
   public ModelCard getModelCard(
@@ -133,6 +206,7 @@ public class ModelCardService {
     var results = modelCard.get("results");
     var higherIsBetterMetrics = getHigherIsBetterMetrics(modelCard);
     Map<String, Task> tasks = new HashMap<>();
+    Map<String, Recommendation> recommendations = new HashMap<>();
     results
         .fields()
         .forEachRemaining(
@@ -159,11 +233,13 @@ public class ModelCardService {
                           metrics.put(
                               metricName,
                               new Metric(metricName, metricValue, stdErrValue, rank, level));
+
+                          addRecommendation(taskName, metricName, level, recommendations);
                         }
                       });
               tasks.put(taskName, new Task(taskName, metrics));
             });
-    return new ModelCard(name, source, tasks);
+    return new ModelCard(name, source, tasks, recommendations);
   }
 
   private Rank getRank(

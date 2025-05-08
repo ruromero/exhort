@@ -30,6 +30,7 @@
     ]
   },
   {
+    "task": "bbq",
     "metrics": [
       "amb_bias_score_",
       "disamb_bias_score_"

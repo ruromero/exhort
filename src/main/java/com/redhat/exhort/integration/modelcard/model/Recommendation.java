@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Red Hat, Inc. and/or its affiliates
+ * Copyright 2025 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,14 +18,6 @@
 
 package com.redhat.exhort.integration.modelcard.model;
 
-import java.util.Map;
+import java.util.Collection;
 
-/**
- * Represents a model card containing information about a machine learning model, its tasks, and
- * recommended guardrails.
- */
-public record ModelCard(
-    String name,
-    String source,
-    Map<String, Task> tasks,
-    Map<String, Recommendation> recommendations) {}
+public record Recommendation(Collection<String> categories, Guardrail guardrail) {}
