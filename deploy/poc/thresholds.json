@@ -199,31 +199,9 @@
     ],
     "levels": [
       {
-        "high_threshold": 0.3,
-        "name": "Very low",
-        "category": "5"
-      },
-      {
-        "low_threshold": 0.3,
-        "high_threshold": 0.5,
-        "name": "Low",
-        "category": "4"
-      },
-      {
-        "low_threshold": 0.5,
-        "high_threshold": 0.7,
+        "low_threshold": 0.0,
+        "high_threshold": 1,
         "name": "Moderate",
-        "category": "3"
-      },
-      {
-        "low_threshold": 0.7,
-        "high_threshold": 0.85,
-        "name": "Good",
-        "category": "2"
-      },
-      {
-        "low_threshold": 0.85,
-        "name": "Excellent",
         "category": "1"
       }
     ]

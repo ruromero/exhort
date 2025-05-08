@@ -43,6 +43,7 @@ import com.redhat.exhort.integration.modelcard.model.Task;
 import com.redhat.exhort.integration.modelcard.model.Threshold;
 
 import io.quarkus.runtime.Startup;
+import io.quarkus.scheduler.Scheduled;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -108,7 +109,8 @@ public class ModelCardService {
             });
   }
 
-  private void loadThresholds() {
+  @Scheduled(every = "1m")
+  void loadThresholds() {
     try {
       var response =
           s3Client.getObject(
@@ -193,8 +195,8 @@ public class ModelCardService {
         thresholds.stream()
             .filter(
                 t ->
-                    (t.task() == null || t.task().equals(task))
-                        && t.metrics().stream().anyMatch(m -> metric.startsWith(m)))
+                    (t.task() == null || task.startsWith(t.task()))
+                        && t.metrics().stream().anyMatch(m -> metric.equals(m)))
             .findFirst()
             .orElse(null);
 
