@@ -1,0 +1,27 @@
+{
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.6",
+    "version": 1,
+    "components": [
+        {
+            "bom-ref": "pkg:maven/com.example/known@1.0.0",
+            "type": "library",
+            "name": "known",
+            "version": "1.0.0",
+            "purl": "pkg:maven/com.example/known@1.0.0"
+        },
+        {
+            "bom-ref": "pkg:maven/com.example/unknown@1.0.0",
+            "type": "library",
+            "name": "unknown",
+            "version": "1.0.0",
+            "purl": "pkg:maven/com.example/unknown@1.0.0"
+        }
+    ],
+    "dependencies": [
+        {
+            "ref": "pkg:maven/com.example/known@1.0.0",
+            "dependsOn": []
+        }
+    ]
+} 

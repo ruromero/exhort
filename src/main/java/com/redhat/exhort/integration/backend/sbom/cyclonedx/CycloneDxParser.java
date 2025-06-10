@@ -20,10 +20,8 @@ package com.redhat.exhort.integration.backend.sbom.cyclonedx;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -89,50 +87,83 @@ public class CycloneDxParser extends SbomParser {
       return buildUnknownDependencies(componentPurls);
     }
 
-    Map<PackageRef, List<PackageRef>> dependencies =
-        bom.getDependencies().stream()
-            .collect(
-                Collectors.toMap(
-                    d -> {
-                      if (componentPurls.get(d.getRef()) == null) {
-                        return rootRef;
-                      }
-                      return componentPurls.get(d.getRef());
-                    },
-                    d -> {
-                      if (d.getDependencies() == null) {
-                        return Collections.emptyList();
-                      }
-                      return d.getDependencies().stream()
-                          .map(dep -> componentPurls.get(dep.getRef()))
-                          .toList();
-                    }));
-    List<PackageRef> directDeps;
+    Map<PackageRef, Set<PackageRef>> dependencies = new HashMap<>();
+    bom.getDependencies()
+        .forEach(
+            d -> {
+              PackageRef ref = componentPurls.getOrDefault(d.getRef(), rootRef);
+              Set<PackageRef> deps = new HashSet<>();
+              if (d.getDependencies() != null) {
+                d.getDependencies()
+                    .forEach(
+                        dep -> {
+                          PackageRef depRef = componentPurls.get(dep.getRef());
+                          if (depRef != null) {
+                            deps.add(depRef);
+                          }
+                        });
+              }
+              dependencies.put(ref, deps);
+            });
+
     addUnknownDependencies(dependencies, componentPurls);
-    if (rootRef != null && dependencies.get(rootRef) != null) {
-      directDeps = dependencies.get(rootRef);
+
+    Set<PackageRef> directDeps;
+    if (rootRef != null && dependencies.containsKey(rootRef)) {
+      directDeps = new HashSet<>(dependencies.get(rootRef));
     } else {
-      directDeps =
-          dependencies.keySet().stream()
-              .filter(depRef -> dependencies.values().stream().noneMatch(d -> d.contains(depRef)))
-              .toList();
+      directDeps = new HashSet<>(dependencies.keySet());
+      dependencies.values().forEach(directDeps::removeAll);
     }
 
-    return directDeps.stream()
-        .map(directRef -> toDirectDependency(directRef, dependencies))
-        .collect(Collectors.toMap(DirectDependency::ref, d -> d));
+    componentPurls.values().stream()
+        .filter(Predicate.not(dependencies::containsKey))
+        .forEach(directDeps::add);
+
+    Map<PackageRef, DirectDependency> result = new HashMap<>();
+    directDeps.forEach(
+        directRef -> {
+          Set<PackageRef> transitiveRefs = new HashSet<>();
+          findTransitiveIterative(directRef, dependencies, transitiveRefs);
+          result.put(
+              directRef,
+              DirectDependency.builder().ref(directRef).transitive(transitiveRefs).build());
+        });
+
+    return result;
   }
 
   private void addUnknownDependencies(
-      Map<PackageRef, List<PackageRef>> dependencies, Map<String, PackageRef> componentPurls) {
+      Map<PackageRef, Set<PackageRef>> dependencies, Map<String, PackageRef> componentPurls) {
     Set<PackageRef> knownDeps = new HashSet<>(dependencies.keySet());
-    dependencies.values().forEach(v -> knownDeps.addAll(v));
+    dependencies.values().forEach(knownDeps::addAll);
     componentPurls.values().stream()
         .filter(Predicate.not(knownDeps::contains))
-        .forEach(d -> dependencies.put(d, Collections.emptyList()));
+        .forEach(d -> dependencies.put(d, new HashSet<>()));
   }
 
-  // The SBOM generator does not have info about the dependency hierarchy
+  private void findTransitiveIterative(
+      PackageRef startRef, Map<PackageRef, Set<PackageRef>> dependencies, Set<PackageRef> acc) {
+    Set<PackageRef> toProcess = new HashSet<>();
+    toProcess.add(startRef);
+
+    while (!toProcess.isEmpty()) {
+      PackageRef current = toProcess.iterator().next();
+      toProcess.remove(current);
+
+      Set<PackageRef> deps = dependencies.get(current);
+      if (deps != null) {
+        deps.stream()
+            .filter(d -> !acc.contains(d))
+            .forEach(
+                d -> {
+                  acc.add(d);
+                  toProcess.add(d);
+                });
+      }
+    }
+  }
+
   private Map<PackageRef, DirectDependency> buildUnknownDependencies(
       Map<String, PackageRef> componentPurls) {
     Map<PackageRef, DirectDependency> deps = new HashMap<>();
@@ -146,29 +177,6 @@ public class CycloneDxParser extends SbomParser {
               deps.put(v, DirectDependency.builder().ref(v).build());
             });
     return deps;
-  }
-
-  private DirectDependency toDirectDependency(
-      PackageRef directRef, Map<PackageRef, List<PackageRef>> dependencies) {
-    var transitiveRefs = new HashSet<PackageRef>();
-    findTransitive(directRef, dependencies, transitiveRefs);
-    var transitive = new HashSet<>(transitiveRefs.stream().toList());
-    return DirectDependency.builder().ref(directRef).transitive(transitive).build();
-  }
-
-  private void findTransitive(
-      PackageRef ref, Map<PackageRef, List<PackageRef>> dependencies, Set<PackageRef> acc) {
-    var deps = dependencies.get(ref);
-    if (deps == null || deps.isEmpty()) {
-      return;
-    }
-    deps.stream()
-        .filter(d -> !acc.contains(d))
-        .forEach(
-            d -> {
-              acc.add(d);
-              findTransitive(d, dependencies, acc);
-            });
   }
 
   private Bom parseBom(InputStream input) {
@@ -196,21 +204,15 @@ public class CycloneDxParser extends SbomParser {
     if (version == null) {
       throw new ParseException("Missing CycloneDX Spec Version");
     }
-    switch (version) {
-      case "1.5":
-        return Version.VERSION_15;
-      case "1.4":
-        return Version.VERSION_14;
-      case "1.3":
-        return Version.VERSION_13;
-      case "1.2":
-        return Version.VERSION_12;
-      case "1.1":
-        return Version.VERSION_11;
-      case "1.0":
-        return Version.VERSION_10;
-      default:
-        throw new ParseException("Invalid Spec Version received");
-    }
+    return switch (version) {
+      case "1.6" -> Version.VERSION_16;
+      case "1.5" -> Version.VERSION_15;
+      case "1.4" -> Version.VERSION_14;
+      case "1.3" -> Version.VERSION_13;
+      case "1.2" -> Version.VERSION_12;
+      case "1.1" -> Version.VERSION_11;
+      case "1.0" -> Version.VERSION_10;
+      default -> throw new ParseException("Invalid Spec Version received");
+    };
   }
 }
