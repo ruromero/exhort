@@ -1,0 +1,59 @@
+{
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.6",
+    "version": 1,
+    "metadata": {
+        "component": {
+            "bom-ref": "pkg:maven/com.example/app@1.0.0",
+            "type": "application",
+            "name": "app",
+            "version": "1.0.0",
+            "purl": "pkg:maven/com.example/app@1.0.0"
+        }
+    },
+    "components": [
+        {
+            "bom-ref": "pkg:maven/com.example/app@1.0.0",
+            "type": "application",
+            "name": "app",
+            "version": "1.0.0",
+            "purl": "pkg:maven/com.example/app@1.0.0"
+        },
+        {
+            "bom-ref": "pkg:maven/com.example/dep1@1.0.0",
+            "type": "library",
+            "name": "dep1",
+            "version": "1.0.0",
+            "purl": "pkg:maven/com.example/dep1@1.0.0"
+        },
+        {
+            "bom-ref": "pkg:maven/com.example/dep2@1.0.0",
+            "type": "library",
+            "name": "dep2",
+            "version": "1.0.0",
+            "purl": "pkg:maven/com.example/dep2@1.0.0"
+        },
+        {
+            "bom-ref": "pkg:maven/com.example/transitive@1.0.0",
+            "type": "library",
+            "name": "transitive",
+            "version": "1.0.0",
+            "purl": "pkg:maven/com.example/transitive@1.0.0"
+        }
+    ],
+    "dependencies": [
+        {
+            "ref": "pkg:maven/com.example/app@1.0.0",
+            "dependsOn": [
+                "pkg:maven/com.example/dep1@1.0.0",
+                "pkg:maven/com.example/dep2@1.0.0"
+            ]
+        },
+        {
+            "ref": "pkg:maven/com.example/dep1@1.0.0",
+            "dependsOn": [
+                "pkg:maven/com.example/transitive@1.0.0"
+            ]
+        }
+    ]
+} 
