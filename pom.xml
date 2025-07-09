@@ -48,7 +48,7 @@
     <deploy-plugin.version>3.1.1</deploy-plugin.version>
 
     <!-- Dependencies -->
-    <exhort-api.version>1.0.15</exhort-api.version>
+    <exhort-api.version>1.0.16</exhort-api.version>
     <sentry.version>7.8.0</sentry.version>
     <spdx.version>2.0.2</spdx.version>
     <htmlunit.version>4.11.1</htmlunit.version>
@@ -215,6 +215,18 @@
       <version>${cvss-calculator.version}</version>
     </dependency>
     <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-hibernate-orm-panache</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-jdbc-postgresql</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-flyway</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.camel.quarkus</groupId>
       <artifactId>camel-quarkus-junit5</artifactId>
       <scope>test</scope>
@@ -239,6 +251,16 @@
       <groupId>org.htmlunit</groupId>
       <artifactId>htmlunit</artifactId>
       <version>${htmlunit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-test-h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-jdbc-h2</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
