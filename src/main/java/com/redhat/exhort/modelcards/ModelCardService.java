@@ -18,6 +18,7 @@
 
 package com.redhat.exhort.modelcards;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import com.redhat.exhort.api.v4.ModelCardResponse;
 import com.redhat.exhort.api.v4.ReportConfig;
 import com.redhat.exhort.api.v4.ReportMetric;
 import com.redhat.exhort.api.v4.ReportTask;
+import com.redhat.exhort.model.modelcards.Guardrail;
 import com.redhat.exhort.model.modelcards.ModelCardConfig;
 import com.redhat.exhort.model.modelcards.ModelCardReport;
 import com.redhat.exhort.model.modelcards.ModelCardTask;
@@ -48,13 +50,29 @@ public class ModelCardService {
 
   @Inject ModelCardRepository repository;
 
+  @Inject GuardrailRepository guardrailRepository;
+
   @Transactional
   public ModelCardResponse get(UUID id) {
     var report = repository.findById(id);
     if (report == null) {
       return null;
     }
-    return toDto(report);
+    List<Guardrail> guardrails = new ArrayList<>();
+    if (report.tasks != null) {
+      // Extract task metric IDs from the scores map
+      List<Long> taskMetricIds = report.tasks.stream()
+          .flatMap(task -> task.scores.keySet().stream())
+          .map(metric -> metric.id)
+          .distinct()
+          .toList();
+      
+      if (!taskMetricIds.isEmpty()) {
+        guardrails = guardrailRepository.findByTaskMetricIds(taskMetricIds);
+      }
+    }
+
+    return toDto(report, guardrails);
   }
 
   @Transactional
@@ -70,13 +88,14 @@ public class ModelCardService {
     return reports.stream().map(this::toSummaryDto).collect(Collectors.toList());
   }
 
-  private ModelCardResponse toDto(ModelCardReport entity) {
+  private ModelCardResponse toDto(ModelCardReport entity, List<Guardrail> guardrails) {
     var dto = new ModelCardResponse();
     dto.id(entity.id.toString());
     dto.name(entity.name);
     dto.source(entity.source);
     dto.config(toConfigDto(entity.config));
     dto.tasks(entity.tasks != null ? entity.tasks.stream().map(this::toTaskDto).toList() : null);
+    dto.guardrails(guardrails.stream().map(this::toGuardrailDto).toList());
     return dto;
   }
 
@@ -167,5 +186,16 @@ public class ModelCardService {
       }
     }
     return null;
+  }
+
+  private com.redhat.exhort.api.v4.Guardrail toGuardrailDto(Guardrail entity) {
+    var dto = new com.redhat.exhort.api.v4.Guardrail();
+    dto.id(entity.id);
+    dto.name(entity.name);
+    dto.description(entity.description);
+    dto.scope(com.redhat.exhort.api.v4.Guardrail.ScopeEnum.valueOf(entity.scope.name()));
+    dto.externalReferences(entity.references);
+    dto.metadataKeys(entity.metadataKeys);
+    return dto;
   }
 }
