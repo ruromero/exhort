@@ -52,6 +52,7 @@ import org.junit.jupiter.api.AfterEach;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.BasicCredentials;
 import com.redhat.exhort.extensions.InjectWireMock;
+import com.redhat.exhort.extensions.OidcWiremockExtension;
 import com.redhat.exhort.extensions.WiremockExtension;
 import com.redhat.exhort.integration.providers.snyk.SnykRequestBuilder;
 
@@ -236,14 +237,10 @@ public abstract class AbstractAnalysisTest {
   }
 
   protected void verifyTpaRequest(String token, int count) {
-    if (token == null) {
-      server.verify(count, postRequestedFor(urlEqualTo(Constants.TPA_ANALYZE_PATH)));
-    } else {
-      server.verify(
-          count,
-          postRequestedFor(urlEqualTo(Constants.TPA_ANALYZE_PATH))
-              .withHeader(Constants.AUTHORIZATION_HEADER, equalTo("Bearer " + token)));
-    }
+    server.verify(
+        count,
+        postRequestedFor(urlEqualTo(Constants.TPA_ANALYZE_PATH))
+            .withHeader(Constants.AUTHORIZATION_HEADER, equalTo("Bearer " + token)));
   }
 
   protected void stubAllProviders() {
@@ -437,6 +434,9 @@ public abstract class AbstractAnalysisTest {
                     .withStatus(200)
                     .withHeader(Exchange.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                     .withBodyFile("tpa/maven_report.json")));
+
+    // Re-stub OIDC endpoints to ensure they're available for token exchange
+    OidcWiremockExtension.restubOidcEndpoints(server);
   }
 
   protected void stubTpaTokenRequests() {
