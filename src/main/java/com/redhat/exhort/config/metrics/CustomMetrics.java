@@ -40,11 +40,17 @@ public class CustomMetrics {
   private static final Collection<String> MONITORED_ROUTES =
       List.of(
           "getTrustedContent",
-          "trustifyRequest",
+          "trustifyScan",
+          // See ProviderRoutePolicy for more details
+          // "trustifyHealthCheck"
+          // "trustifyRequest"
+          // "trustifyValidateCredentials"
           "analyticsIdentify",
           "analyticsTrackAnalysis",
           "analyticsTrackToken",
-          "processFailedRequests");
+          "processFailedRequests",
+          "processInternalError",
+          "osvHealthCheck");
 
   @Produces
   @Singleton
