@@ -26,6 +26,8 @@ import java.util.Optional;
 import org.apache.camel.Body;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangeProperty;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -74,6 +76,8 @@ public class ReportTemplate {
     params.put("cveIssueTemplate", cveIssuePathRegex);
     params.put("imageMapping", getImageMapping());
     params.put("rhdaSource", rhdaSource);
+    getBrandingConfig()
+        .ifPresent(config -> params.put("brandingConfig", getBrandingConfigMap(config)));
     if (!disabled && writeKey.isPresent()) {
       params.put("userId", userId);
       params.put("anonymousId", anonymousId);
@@ -106,6 +110,98 @@ public class ReportTemplate {
 
     ObjectWriter objectWriter = new ObjectMapper().writer();
     return objectWriter.writeValueAsString(urlMapping);
+  }
+
+  private Optional<BrandingConfig> getBrandingConfig() {
+    try {
+      Config config = ConfigProvider.getConfig();
+      return config
+          .getOptionalValue("branding.display-name", String.class)
+          .filter(displayName -> !displayName.isEmpty())
+          .map(
+              displayName ->
+                  new BrandingConfigImpl(
+                      displayName,
+                      config.getOptionalValue("branding.explore-url", String.class).orElse(""),
+                      config.getOptionalValue("branding.explore-title", String.class).orElse(""),
+                      config
+                          .getOptionalValue("branding.explore-description", String.class)
+                          .orElse(""),
+                      config
+                          .getOptionalValue("branding.image-recommendation", String.class)
+                          .orElse(""),
+                      config
+                          .getOptionalValue("branding.image-remediation-link", String.class)
+                          .orElse("")));
+    } catch (Exception e) {
+      return Optional.empty();
+    }
+  }
+
+  private Map<String, String> getBrandingConfigMap(BrandingConfig config) {
+    Map<String, String> branding = new HashMap<>();
+    branding.put("displayName", config.displayName());
+    branding.put("exploreUrl", config.exploreUrl());
+    branding.put("exploreTitle", config.exploreTitle());
+    branding.put("exploreDescription", config.exploreDescription());
+    branding.put("imageRecommendation", config.imageRecommendation());
+    branding.put("imageRemediationLink", config.imageRemediationLink());
+    return branding;
+  }
+
+  @RegisterForReflection
+  private static class BrandingConfigImpl implements BrandingConfig {
+    private final String displayName;
+    private final String exploreUrl;
+    private final String exploreTitle;
+    private final String exploreDescription;
+    private final String imageRecommendation;
+    private final String imageRemediationLink;
+
+    public BrandingConfigImpl(
+        String displayName,
+        String exploreUrl,
+        String exploreTitle,
+        String exploreDescription,
+        String imageRecommendation,
+        String imageRemediationLink) {
+      this.displayName = displayName;
+      this.exploreUrl = exploreUrl;
+      this.exploreTitle = exploreTitle;
+      this.exploreDescription = exploreDescription;
+      this.imageRecommendation = imageRecommendation;
+      this.imageRemediationLink = imageRemediationLink;
+    }
+
+    @Override
+    public String displayName() {
+      return displayName;
+    }
+
+    @Override
+    public String exploreUrl() {
+      return exploreUrl;
+    }
+
+    @Override
+    public String exploreTitle() {
+      return exploreTitle;
+    }
+
+    @Override
+    public String exploreDescription() {
+      return exploreDescription;
+    }
+
+    @Override
+    public String imageRecommendation() {
+      return imageRecommendation;
+    }
+
+    @Override
+    public String imageRemediationLink() {
+      return imageRemediationLink;
+    }
   }
 
   @RegisterForReflection
