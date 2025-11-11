@@ -17,7 +17,6 @@
 
 package io.github.guacsec.trustifyda.integration;
 
-import static io.github.guacsec.trustifyda.extensions.WiremockExtension.TRUSTIFY_TOKEN;
 import static io.restassured.RestAssured.given;
 import static org.apache.camel.Exchange.CONTENT_TYPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,6 +30,7 @@ import java.util.List;
 import org.hamcrest.text.MatchesPattern;
 import org.htmlunit.BrowserVersion;
 import org.htmlunit.WebClient;
+import org.htmlunit.html.DomAttr;
 import org.htmlunit.html.DomElement;
 import org.htmlunit.html.DomNodeList;
 import org.htmlunit.html.HtmlAnchor;
@@ -52,7 +52,7 @@ public class HtmlReportTest extends AbstractAnalysisTest {
   private static final String CYCLONEDX = "cyclonedx";
 
   @Test
-  public void testHtmlWithoutToken() throws IOException {
+  public void testHtml() throws IOException {
     stubAllProviders();
 
     String body =
@@ -82,27 +82,30 @@ public class HtmlReportTest extends AbstractAnalysisTest {
 
     DomNodeList<DomElement> tables = page.getElementsByTagName("table");
     assertEquals(3, tables.size()); // osv | trustify/osv | trustify/csaf
-    DomElement table = tables.get(tables.size() - 1); // trustify/csaf
+    DomElement table = tables.get(1); // trustify/osv
     HtmlTableBody tbody = getTableBodyForDependency("io.quarkus:quarkus-hibernate-orm", table);
     assertNotNull(tbody);
     page = expandTransitiveTableDataCell(webClient, tbody);
 
     table =
         page.getFirstByXPath(
-            "//table[contains(@aria-label, 'trustify/csaf transitive vulnerabilities')]");
+            "//table[contains(@aria-label, 'trustify/osv transitive vulnerabilities')]");
     List<HtmlTableBody> tbodies = table.getByXPath(".//tbody");
-    HtmlTableBody issue =
+    List<HtmlTableBody> issues =
         tbodies.stream()
             .filter(
                 issuesTbody -> {
                   List<HtmlAnchor> tds = issuesTbody.getByXPath("./tr/td");
                   return tds.size() == 6;
                 })
-            .findFirst()
-            .get();
-    assertNotNull(issue);
-
-    verifyTrustifyRequest(TRUSTIFY_TOKEN);
+            .toList();
+    assertNotNull(issues);
+    assertEquals(5, issues.size());
+    DomAttr remediationLink = (DomAttr) issues.get(0).getByXPath("./tr/td[6]/a/@href").get(0);
+    assertNotNull(remediationLink);
+    assertEquals(
+        "https://maven.repository.redhat.com/ga/com/fasterxml/jackson/core/jackson-databind/2.13.1.2-redhat-00001",
+        remediationLink.getValue());
   }
 
   @Test
@@ -263,7 +266,7 @@ public class HtmlReportTest extends AbstractAnalysisTest {
     List<HtmlElement> sectionElements = rootElement.getByXPath("./section");
     assertEquals(1, sectionElements.size());
     List<HtmlAnchor> anchorElements =
-        page.getByXPath("//a[contains(@href, 'https://test-catalog.example.com/containers/ubi9')]");
+        page.getByXPath("//a[contains(@href, 'https://test-catalog.example.com/containers')]");
     assertTrue(!anchorElements.isEmpty(), "At least one href contains the desired substring");
     verifyTrustifyRequest(OK_TOKEN, 3);
   }
@@ -291,17 +294,6 @@ public class HtmlReportTest extends AbstractAnalysisTest {
       return tbody.getHtmlPageOrNull();
     }
     HtmlButton button = td.getFirstByXPath("./button");
-
-    // Debug: Print button details
-    System.err.println(
-        "*** DEBUG: Found button: "
-            + button.getAttribute("id")
-            + ", aria-expanded: "
-            + button.getAttribute("aria-expanded")
-            + ", class: "
-            + button.getAttribute("class")
-            + " ***");
-
     return click(webClient, button);
   }
 

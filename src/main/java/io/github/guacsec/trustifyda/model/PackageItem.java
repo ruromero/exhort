@@ -15,8 +15,11 @@
  * limitations under the License.
  */
 
-package io.github.guacsec.trustifyda.model.trustedcontent;
+package io.github.guacsec.trustifyda.model;
 
-import io.github.guacsec.trustifyda.api.PackageRef;
+import java.util.List;
 
-public record CachedRecommendation(PackageRef ref, IndexedRecommendation recommendation) {}
+import io.github.guacsec.trustifyda.api.v5.Issue;
+import io.github.guacsec.trustifyda.model.trustify.Recommendation;
+
+public record PackageItem(String packageRef, Recommendation recommendation, List<Issue> issues) {}

@@ -19,7 +19,7 @@ export interface BrandingConfig {
   exploreTitle: string;
   exploreDescription: string;
   imageRecommendation: string;
-  imageRemediationLink: string;
+  imageRecommendationLink: string;
 }
 
 export interface ReportMap {
@@ -149,13 +149,7 @@ export interface SourceItem {
 export interface SourceReport {
   summary: Summary;
   dependencies: Dependency[];
-  unscanned?: Unscanned[];
 }
-export interface Unscanned {
-  ref: string | null;
-  reason: string | null;
-}
-
 
 export interface VulnerabilityItem {
   id: string;

@@ -17,12 +17,8 @@
 
 package io.github.guacsec.trustifyda.model;
 
-import java.util.List;
 import java.util.Map;
 
-import io.github.guacsec.trustifyda.api.v5.Issue;
 import io.github.guacsec.trustifyda.api.v5.ProviderStatus;
-import io.github.guacsec.trustifyda.api.v5.UnscannedDependency;
 
-public record ProviderResponse(
-    Map<String, List<Issue>> issues, ProviderStatus status, List<UnscannedDependency> unscanned) {}
+public record ProviderResponse(Map<String, PackageItem> pkgItems, ProviderStatus status) {}

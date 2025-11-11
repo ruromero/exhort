@@ -36,7 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import io.github.guacsec.trustifyda.integration.Constants;
-import io.github.guacsec.trustifyda.integration.trustedcontent.ubi.UBIRecommendation;
+import io.github.guacsec.trustifyda.integration.providers.trustify.ubi.UBIRecommendation;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -145,7 +145,7 @@ public class ReportTemplate {
     branding.put("exploreTitle", config.exploreTitle());
     branding.put("exploreDescription", config.exploreDescription());
     branding.put("imageRecommendation", config.imageRecommendation());
-    branding.put("imageRemediationLink", config.imageRemediationLink());
+    branding.put("imageRecommendationLink", config.imageRecommendationLink());
     return branding;
   }
 
@@ -156,7 +156,7 @@ public class ReportTemplate {
     private final String exploreTitle;
     private final String exploreDescription;
     private final String imageRecommendation;
-    private final String imageRemediationLink;
+    private final String imageRecommendationLink;
 
     public BrandingConfigImpl(
         String displayName,
@@ -164,13 +164,13 @@ public class ReportTemplate {
         String exploreTitle,
         String exploreDescription,
         String imageRecommendation,
-        String imageRemediationLink) {
+        String imageRecommendationLink) {
       this.displayName = displayName;
       this.exploreUrl = exploreUrl;
       this.exploreTitle = exploreTitle;
       this.exploreDescription = exploreDescription;
       this.imageRecommendation = imageRecommendation;
-      this.imageRemediationLink = imageRemediationLink;
+      this.imageRecommendationLink = imageRecommendationLink;
     }
 
     @Override
@@ -199,8 +199,8 @@ public class ReportTemplate {
     }
 
     @Override
-    public String imageRemediationLink() {
-      return imageRemediationLink;
+    public String imageRecommendationLink() {
+      return imageRecommendationLink;
     }
   }
 
