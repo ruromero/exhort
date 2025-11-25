@@ -17,12 +17,6 @@
 
 package io.github.guacsec.trustifyda.integration.providers;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,11 +28,15 @@ import java.util.stream.Stream;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.github.guacsec.trustifyda.api.PackageRef;
 import io.github.guacsec.trustifyda.api.v5.DependencyReport;
@@ -56,8 +54,6 @@ import io.github.guacsec.trustifyda.model.PackageItem;
 import io.github.guacsec.trustifyda.model.ProviderResponse;
 import io.github.guacsec.trustifyda.model.trustify.Recommendation;
 import io.github.guacsec.trustifyda.model.trustify.Vulnerability;
-
-import jakarta.ws.rs.core.Response;
 
 public class ProviderResponseHandlerTest {
 
@@ -250,16 +246,6 @@ public class ProviderResponseHandlerTest {
     DependencyReport highest = getValidSource(response, TEST_SOURCE).getDependencies().get(0);
     assertEquals("ISSUE-002", highest.getHighestVulnerability().getId());
     assertEquals(9f, highest.getHighestVulnerability().getCvssScore());
-  }
-
-  private void assertOkStatus(ProviderReport response) {
-    assertNotNull(response);
-    assertNotNull(response.getStatus());
-
-    assertEquals(Response.Status.OK.getStatusCode(), response.getStatus().getCode());
-    assertEquals(Response.Status.OK.getReasonPhrase(), response.getStatus().getMessage());
-    assertTrue(response.getStatus().getOk());
-    assertEquals(TEST_PROVIDER, response.getStatus().getName());
   }
 
   private Source getValidSource(ProviderReport report, String sourceName) {
