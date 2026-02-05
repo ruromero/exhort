@@ -1,6 +1,5 @@
 
-<b>Pattern 1: After removing or decommissioning a feature/provider/integration, delete all related configuration, deployment wiring, and code paths (routes, aggregations, env vars, constants) to avoid dead code and misleading operational setup.
-</b>
+### Pattern 1: After removing or decommissioning a feature/provider/integration, delete all related configuration, deployment wiring, and code paths (routes, aggregations, env vars, constants) to avoid dead code and misleading operational setup.
 
 Example code before:
 ```
