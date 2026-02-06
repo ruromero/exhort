@@ -25,6 +25,7 @@ import SecurityCheckIcon from '../images/security-check.svg';
 import TrustifyIcon from '../images/trustify.png';
 import {constructImageName, imageRecommendationLink } from '../utils/utils';
 import {useAppContext} from "../App";
+import { LicensesChartCard } from './LicensesChartCard';
 
 const ICON_STYLE = {width: "16px", height: "16px", verticalAlign: "middle"} as const;
 
@@ -43,13 +44,19 @@ export const SummaryCard = ({report, isReportMap, purl}: { report: Report, isRep
 
   const showExploreCard = brandingConfig.exploreTitle.trim() && brandingConfig.exploreUrl.trim() && brandingConfig.exploreDescription.trim();
   const showContainerRecommendationsCard = isReportMap && brandingConfig.imageRecommendation.trim() && brandingConfig.imageRecommendationLink.trim();
+  const licensesReports = report.licenses || [];
 
   const getBrandIcon = () => {
     // Always use the default icon - custom icons can be overridden via CSS
     return <img src={TrustifyIcon} alt="Trustify Icon" style={ICON_STYLE}/>;
   };
 
-  const cardDivider = (12 / (1 + Number(showExploreCard) + Number(showContainerRecommendationsCard))) as GridItemProps['md'];
+  // First row: Vendor Issues + License cards (same row when possible)
+  const firstRowCount = 1 + licensesReports.length;
+  const firstRowSpan = (12 / firstRowCount) as GridItemProps['md'];
+  // Second row: Remediations, Container recommendations, Explore
+  const secondRowCount = 1 + Number(showContainerRecommendationsCard) + Number(showExploreCard);
+  const secondRowSpan = (12 / secondRowCount) as GridItemProps['md'];
 
   return (
     <Grid hasGutter>
@@ -59,7 +66,8 @@ export const SummaryCard = ({report, isReportMap, purl}: { report: Report, isRep
         </Icon>&nbsp;{brandingConfig.displayName} overview of security issues
       </Title>
       <Divider/>
-      <GridItem>
+      {/* Row 1: Vendor Issues and Licenses */}
+      <GridItem md={firstRowSpan}>
         <Card isFlat isFullHeight>
           <CardHeader>
             <CardTitle>
@@ -103,8 +111,32 @@ export const SummaryCard = ({report, isReportMap, purl}: { report: Report, isRep
           <Divider/>
         </Card>
       </GridItem>
-      <GridItem md={cardDivider}>
-        <Card isFlat>
+      {licensesReports.map((licenseReport, index) => (
+        <GridItem md={firstRowSpan} key={index}>
+          <Card isFlat isFullHeight>
+            <CardHeader>
+              <CardTitle>
+                <DescriptionListTerm style={{fontSize: "large"}}>
+                  License Summary
+                </DescriptionListTerm>
+              </CardTitle>
+            </CardHeader>
+            <CardBody>
+              <DescriptionListGroup style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <DescriptionListTerm style={{fontSize: "large"}}>
+                  {licenseReport.status.name || "Unknown"}
+                </DescriptionListTerm>
+                <DescriptionListDescription>
+                  <LicensesChartCard summary={licenseReport.summary}/>
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+            </CardBody>
+          </Card>&nbsp;
+        </GridItem>
+      ))}
+      {/* Row 2: Remediations, Container recommendations, Explore */}
+      <GridItem md={secondRowSpan}>
+        <Card isFlat isFullHeight>
           <DescriptionListGroup>
             <CardTitle component="h4">
               <DescriptionListTerm style={{fontSize: "large"}}>
@@ -149,8 +181,8 @@ export const SummaryCard = ({report, isReportMap, purl}: { report: Report, isRep
         </Card>&nbsp;
       </GridItem>
       {showContainerRecommendationsCard && (
-        <GridItem md={cardDivider}>
-          <Card isFlat>
+        <GridItem md={secondRowSpan}>
+          <Card isFlat isFullHeight>
             <DescriptionListGroup>
               <CardTitle component="h4">
                 <DescriptionListTerm style={{fontSize: "large"}}>
@@ -180,8 +212,8 @@ export const SummaryCard = ({report, isReportMap, purl}: { report: Report, isRep
         </GridItem>
       )}
       {showExploreCard && (
-        <GridItem md={cardDivider}>
-        <Card isFlat>
+        <GridItem md={secondRowSpan}>
+        <Card isFlat isFullHeight>
           <DescriptionListGroup>
             <CardTitle component="h4">
               <DescriptionListTerm style={{fontSize: "large"}}>

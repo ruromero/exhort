@@ -1,6 +1,6 @@
 import React from 'react';
 import {Alert, AlertVariant} from '@patternfly/react-core';
-import {hasSignUpTab, uppercaseFirstLetter} from '../utils/utils';
+import {uppercaseFirstLetter} from '../utils/utils';
 import {ProviderStatus, Report} from '../api/report';
 
 export const ReportErrorAlert = ({report}: { report: Report }) => {
@@ -13,7 +13,7 @@ export const ReportErrorAlert = ({report}: { report: Report }) => {
     .map(name => {
       return report.providers[name].status;
     })
-    .filter(e => (!e.ok || isWarning(e)) && !hasSignUpTab(e));
+    .filter(e => (!e.ok || isWarning(e)));
 
   const getVariant = (e: ProviderStatus) => {
     if(e.ok && !isWarning(e)) {

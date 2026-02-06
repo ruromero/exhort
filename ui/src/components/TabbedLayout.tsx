@@ -1,5 +1,6 @@
 import {PageSection, PageSectionVariants, Tab, Tabs, TabTitleText,} from '@patternfly/react-core';
 import {DepCompoundTable} from "./DepCompoundTable";
+import {LicensesTable} from "./LicensesTable";
 import {getSourceName, getSources, Report} from "../api/report";
 import React, {useEffect, useRef} from 'react';
 import {useAppContext} from '../App';
@@ -59,6 +60,18 @@ export const TabbedLayout = ({report}: { report: Report }) => {
         </PageSection>
       </Tab>
     );
+  });
+
+  report.licenses?.forEach((license) => {
+    tabs.push(<Tab
+      eventKey={license.status.name}
+      title={<TabTitleText>{license.status.name}</TabTitleText>}
+      aria-label={`${license.status.name} source`}
+    >
+      <PageSection variant={PageSectionVariants.default}>
+        <LicensesTable name={license.status.name} dependencies={license.packages} />
+      </PageSection>
+    </Tab>)
   });
 
   return (

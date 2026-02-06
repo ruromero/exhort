@@ -109,6 +109,51 @@ public class HtmlReportTest extends AbstractAnalysisTest {
   }
 
   @Test
+  public void testHtmlLicensesTableAndPieChart() throws IOException {
+    stubAllProviders();
+
+    String body =
+        given()
+            .header(CONTENT_TYPE, Constants.CYCLONEDX_MEDIATYPE_JSON)
+            .body(loadSBOMFile(CYCLONEDX))
+            .header("Accept", MediaType.TEXT_HTML)
+            .when()
+            .post("/api/v5/analysis")
+            .then()
+            .assertThat()
+            .statusCode(200)
+            .contentType(MediaType.TEXT_HTML)
+            .header(
+                Constants.EXHORT_REQUEST_ID_HEADER,
+                MatchesPattern.matchesPattern(REGEX_MATCHER_REQUEST_ID))
+            .extract()
+            .body()
+            .asString();
+
+    var webClient = initWebClient();
+    HtmlPage page = extractPage(webClient, body);
+
+    // Summary section: license pie chart (License Summary + Concluded licenses)
+    String pageText = page.asNormalizedText();
+    assertTrue(
+        pageText.contains("License Summary"),
+        "Page should contain License Summary from the license card");
+    assertTrue(
+        pageText.contains("Concluded licenses"),
+        "Page should contain Concluded licenses (pie chart subtitle)");
+
+    // Licenses tab (deps.dev from stub)
+    HtmlButton licensesTab = page.getFirstByXPath("//button[@aria-label='deps.dev source']");
+    assertNotNull(licensesTab, "Licenses tab (deps.dev source) should be present");
+
+    page = click(webClient, licensesTab);
+
+    // Licenses table visible after selecting the tab
+    DomElement licensesTable = page.getFirstByXPath("//table[contains(@aria-label, 'licenses')]");
+    assertNotNull(licensesTable, "Licenses table should be present when licenses tab is selected");
+  }
+
+  @Test
   public void testHtmlUnauthorized() throws IOException {
     stubAllProviders();
 
