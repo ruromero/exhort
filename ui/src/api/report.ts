@@ -1,5 +1,3 @@
-import {getSignUpLink} from "../utils/utils";
-
 export interface AppData {
   providerPrivateData?: string[] | null;
   report: Report | ReportMap;
@@ -40,6 +38,38 @@ export interface Report {
       };
     };
   };
+  licenses?: LicenseReport[];
+}
+
+export interface LicenseReport {
+  status: ProviderStatus
+  summary: LicenseSummary;
+  packages: {
+    [key: string]: LicensePackageReport;
+  };
+}
+
+export interface LicensePackageReport {
+  concluded: LicenseInfo;
+  evidence: LicenseInfo[];
+}
+
+export interface LicenseInfo {
+  identifiers: string[];
+  expression: string;
+  name: string;
+  category: string;
+  source: string;
+  sourceUrl: string;
+}
+
+export interface LicenseSummary {
+  total: number;
+  concluded: number;
+  permissive: number;
+  "strong-copyleft": number;
+  unknown: number;
+  "weak-copyleft": number;
 }
 
 export interface ProviderStatus {
@@ -111,9 +141,6 @@ export function getSources(report: Report): SourceItem[] {
   });
   return result.sort((a, b) => {
     if(Object.keys(a.report).length === 0 && Object.keys(b.report).length === 0) {
-      if(getSignUpLink(a.provider) === '') {
-        return getSignUpLink(b.provider) === '' ? 0 : -1;
-      }
       return 1;
     }
     return Object.keys(b.report).length - Object.keys(a.report).length;
