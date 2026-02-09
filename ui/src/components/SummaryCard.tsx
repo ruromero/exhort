@@ -53,10 +53,11 @@ export const SummaryCard = ({report, isReportMap, purl}: { report: Report, isRep
 
   // First row: Vendor Issues + License cards (same row when possible)
   const firstRowCount = 1 + licensesReports.length;
-  const firstRowSpan = (12 / firstRowCount) as GridItemProps['md'];
+  const firstRowSpan = Math.min(12, Math.max(1, Math.floor(12 / firstRowCount))) as GridItemProps['md'];
+  
   // Second row: Remediations, Container recommendations, Explore
   const secondRowCount = 1 + Number(showContainerRecommendationsCard) + Number(showExploreCard);
-  const secondRowSpan = (12 / secondRowCount) as GridItemProps['md'];
+  const secondRowSpan = Math.min(12, Math.max(1, Math.floor(12 / secondRowCount))) as GridItemProps['md'];
 
   return (
     <Grid hasGutter>

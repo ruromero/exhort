@@ -379,8 +379,8 @@ export const reportBasic: AppData = {
           "concluded": 10,
           "permissive": 8,
           "weak-copyleft": 2,
-          "strong-copyleft": 10,
-          "unknown": 2
+          "strong-copyleft": 0,
+          "unknown": 0
         },
         "packages": {
           "pkg:maven/io.quarkus/quarkus-core@2.13.5.Final": {

@@ -63,7 +63,8 @@ export const TabbedLayout = ({report}: { report: Report }) => {
   });
 
   report.licenses?.forEach((license) => {
-    tabs.push(<Tab
+    tabs.push(<Tab 
+      key={license.status.name}
       eventKey={license.status.name}
       title={<TabTitleText>{license.status.name}</TabTitleText>}
       aria-label={`${license.status.name} source`}

@@ -148,8 +148,11 @@ public class HtmlReportTest extends AbstractAnalysisTest {
 
     page = click(webClient, licensesTab);
 
-    // Licenses table visible after selecting the tab
-    DomElement licensesTable = page.getFirstByXPath("//table[contains(@aria-label, 'licenses')]");
+    // Licenses table visible after selecting the tab (aria-label is "<source> table", e.g.
+    // "deps.dev table")
+    DomElement licensesTable =
+        page.getFirstByXPath(
+            "//table[contains(@aria-label, 'deps.dev') and contains(@aria-label, 'table')]");
     assertNotNull(licensesTable, "Licenses table should be present when licenses tab is selected");
   }
 

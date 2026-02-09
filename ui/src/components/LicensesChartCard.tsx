@@ -1,8 +1,7 @@
 import {Bullseye, CardBody} from '@patternfly/react-core';
-import {ChartDonut, ChartThemeColor} from '@patternfly/react-charts';
+import {ChartDonut} from '@patternfly/react-charts';
 import {LicenseSummary} from '../api/report';
-
-const customColors = [ChartThemeColor.blue,ChartThemeColor.green,ChartThemeColor.gold,ChartThemeColor.orange];
+import {CATEGORY_COLORS} from './LicensesCountByCategory';
 
 export const LicensesChartCard = ({summary}: { summary: LicenseSummary }) => {
 
@@ -13,14 +12,12 @@ export const LicensesChartCard = ({summary}: { summary: LicenseSummary }) => {
   const concluded = summary["concluded"] ?? 0;
 
   const hasValues = permissive + strongCopyleft + unknown + weakCopyleft > 0;
-  const zeroColor = '#D5F5E3';
-  const colorScale = hasValues ? customColors : [zeroColor];
 
   const legendData = [
-    {name: `Permissive: ${permissive}`, symbol: {type: 'square', fill: customColors[0]}},
-    {name: `Weak Copyleft: ${weakCopyleft}`, symbol: {type: 'square', fill: customColors[1]}},
-    {name: `Strong Copyleft: ${strongCopyleft}`, symbol: {type: 'square', fill: customColors[2]}},
-    {name: `Unknown: ${unknown}`, symbol: {type: 'square', fill: customColors[3]}},
+    {name: `Permissive: ${permissive}`, symbol: {type: 'square', fill: CATEGORY_COLORS.PERMISSIVE}},
+    {name: `Weak Copyleft: ${weakCopyleft}`, symbol: {type: 'square', fill: CATEGORY_COLORS.WEAK_COPYLEFT}},
+    {name: `Strong Copyleft: ${strongCopyleft}`, symbol: {type: 'square', fill: CATEGORY_COLORS.STRONG_COPYLEFT}},
+    {name: `Unknown: ${unknown}`, symbol: {type: 'square', fill: CATEGORY_COLORS.UNKNOWN}},
   ];
 
   return (
@@ -48,7 +45,7 @@ export const LicensesChartCard = ({summary}: { summary: LicenseSummary }) => {
               subTitle="Concluded licenses"
               title={`${concluded}`}
               width={350}
-              colorScale={colorScale}
+              colorScale={Object.values(CATEGORY_COLORS)}
             />
           </div>
         </Bullseye>
