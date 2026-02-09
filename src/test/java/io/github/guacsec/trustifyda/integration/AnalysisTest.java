@@ -215,9 +215,12 @@ public class AnalysisTest extends AbstractAnalysisTest {
             .extract()
             .body()
             .asPrettyString();
+
+    body = replaceMockedDepsDevSourceUrl(body);
     assertJson("reports/report.json", body);
     verifyTrustifyRequest(TRUSTIFY_TOKEN);
     verifyRecommendRequest();
+    verifyLicensesRequest(1);
   }
 
   @Test
@@ -270,8 +273,10 @@ public class AnalysisTest extends AbstractAnalysisTest {
             .extract()
             .body()
             .asPrettyString();
+    body = replaceMockedDepsDevSourceUrl(body);
     assertJson("reports/report.json", body);
     verifyTrustifyRequest(OK_TOKEN);
+    verifyLicensesRequest(1);
   }
 
   @Test
@@ -367,7 +372,13 @@ public class AnalysisTest extends AbstractAnalysisTest {
     assertNull(osvSource.getDependencies());
     assertNull(csafSource.getDependencies());
 
+    assertEquals(1, report.getLicenses().size());
+    assertNotNull(report.getLicenses().get(0).getSummary());
+    assertNotNull(report.getLicenses().get(0).getStatus());
+    assertTrue(report.getLicenses().get(0).getPackages().isEmpty());
+
     verifyTrustifyRequest(TRUSTIFY_TOKEN);
+    verifyLicensesRequest(1);
   }
 
   @ParameterizedTest
@@ -546,8 +557,12 @@ public class AnalysisTest extends AbstractAnalysisTest {
             .extract()
             .body()
             .asPrettyString();
+
+    body = replaceMockedDepsDevSourceUrl(body);
+
     assertJson("reports/batch_report.json", body);
     verifyTrustifyRequest(OK_TOKEN, 3);
+    verifyLicensesRequest(3);
   }
 
   private void assertScanned(Scanned scanned) {
@@ -649,6 +664,85 @@ public class AnalysisTest extends AbstractAnalysisTest {
   }
 
   @Test
+  public void testLicensesInternalError() {
+    stubDepsDevInternalErrorRequest();
+
+    var report =
+        given()
+            .header(CONTENT_TYPE, Constants.CYCLONEDX_MEDIATYPE_JSON)
+            .header("Accept", MediaType.APPLICATION_JSON)
+            .body(loadSBOMFile(CYCLONEDX))
+            .when()
+            .post("/api/v5/analysis")
+            .then()
+            .assertThat()
+            .statusCode(200)
+            .contentType(MediaType.APPLICATION_JSON)
+            .header(
+                Constants.EXHORT_REQUEST_ID_HEADER,
+                MatchesPattern.matchesPattern(REGEX_MATCHER_REQUEST_ID))
+            .extract()
+            .body()
+            .as(AnalysisReport.class);
+
+    // Verify that the licenses provider has a timeout error
+    assertEquals(1, report.getLicenses().size());
+    var licenses = report.getLicenses().get(0);
+    assertNotNull(licenses, "Expected one result from licenses provider");
+
+    assertEquals(500, licenses.getStatus().getCode(), "Internal error should return 500 status");
+    assertFalse(licenses.getStatus().getOk(), "Should mark status as not OK");
+
+    assertTrue(licenses.getPackages().isEmpty(), "Packages should be empty on internal error");
+
+    verifyLicensesRequest(1);
+  }
+
+  @Test
+  public void testLicensesTimeoutError() {
+    stubAllProviders();
+    stubDepsDevTimeoutRequest();
+
+    var report =
+        given()
+            .header(CONTENT_TYPE, Constants.CYCLONEDX_MEDIATYPE_JSON)
+            .header("Accept", MediaType.APPLICATION_JSON)
+            .body(loadSBOMFile(CYCLONEDX))
+            .when()
+            .post("/api/v5/analysis")
+            .then()
+            .assertThat()
+            .statusCode(200)
+            .contentType(MediaType.APPLICATION_JSON)
+            .header(
+                Constants.EXHORT_REQUEST_ID_HEADER,
+                MatchesPattern.matchesPattern(REGEX_MATCHER_REQUEST_ID))
+            .extract()
+            .body()
+            .as(AnalysisReport.class);
+
+    // Verify that the licenses provider has a timeout error
+    assertEquals(1, report.getLicenses().size());
+    var licenses = report.getLicenses().get(0);
+    assertNotNull(licenses, "Expected one result from licenses provider");
+
+    // Timeout should result in GATEWAY_TIMEOUT (504) status
+    assertEquals(
+        jakarta.ws.rs.core.Response.Status.GATEWAY_TIMEOUT.getStatusCode(),
+        licenses.getStatus().getCode(),
+        "Timeout should return 504 GATEWAY_TIMEOUT status");
+    assertFalse(licenses.getStatus().getOk(), "Timeout should mark status as not OK");
+    assertEquals(
+        "Request timed out",
+        licenses.getStatus().getMessage(),
+        "Timeout should have appropriate error message");
+
+    assertTrue(licenses.getPackages().isEmpty(), "Packages should be empty when request times out");
+
+    verifyLicensesRequest(1);
+  }
+
+  @Test
   public void testCachingBehavior() {
     stubAllProviders();
 
@@ -709,6 +803,67 @@ public class AnalysisTest extends AbstractAnalysisTest {
         firstOsvSource.getSummary().getTotal(),
         secondOsvSource.getSummary().getTotal(),
         "Both responses should have the same total vulnerabilities");
+  }
+
+  @Test
+  public void testLicensesCaching() {
+    stubAllProviders();
+
+    // First request - cache should be empty, Deps.dev licenses should be called
+    var firstResponse =
+        given()
+            .header(CONTENT_TYPE, Constants.CYCLONEDX_MEDIATYPE_JSON)
+            .header("Accept", MediaType.APPLICATION_JSON)
+            .body(loadSBOMFile(CYCLONEDX))
+            .when()
+            .post("/api/v5/analysis")
+            .then()
+            .assertThat()
+            .statusCode(200)
+            .contentType(MediaType.APPLICATION_JSON)
+            .extract()
+            .body()
+            .as(AnalysisReport.class);
+
+    assertEquals(1, firstResponse.getLicenses().size());
+    assertTrue(firstResponse.getLicenses().get(0).getStatus().getOk());
+    verifyLicensesRequest(1);
+
+    // Reset WireMock request count but keep stubs
+    server.resetRequests();
+
+    // Second request - licenses should be from cache, Deps.dev should NOT be called
+    var secondResponse =
+        given()
+            .header(CONTENT_TYPE, Constants.CYCLONEDX_MEDIATYPE_JSON)
+            .header("Accept", MediaType.APPLICATION_JSON)
+            .body(loadSBOMFile(CYCLONEDX))
+            .when()
+            .post("/api/v5/analysis")
+            .then()
+            .assertThat()
+            .statusCode(200)
+            .contentType(MediaType.APPLICATION_JSON)
+            .extract()
+            .body()
+            .as(AnalysisReport.class);
+
+    verifyLicensesRequest(0);
+
+    // Both responses should have the same licenses data
+    assertEquals(
+        firstResponse.getLicenses().get(0).getStatus().getOk(),
+        secondResponse.getLicenses().get(0).getStatus().getOk());
+    assertEquals(
+        firstResponse.getLicenses().get(0).getPackages().size(),
+        secondResponse.getLicenses().get(0).getPackages().size(),
+        "Both responses should have the same number of license packages");
+    assertNotNull(firstResponse.getLicenses().get(0).getSummary());
+    assertNotNull(secondResponse.getLicenses().get(0).getSummary());
+    assertEquals(
+        firstResponse.getLicenses().get(0).getSummary().getTotal(),
+        secondResponse.getLicenses().get(0).getSummary().getTotal(),
+        "Both responses should have the same license summary total");
   }
 
   @Test
