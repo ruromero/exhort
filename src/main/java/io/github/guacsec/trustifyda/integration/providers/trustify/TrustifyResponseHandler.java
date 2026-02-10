@@ -106,6 +106,9 @@ public class TrustifyResponseHandler extends ProviderResponseHandler {
     List<Issue> issues = new ArrayList<>();
     details.forEach(
         vuln -> {
+          if (vuln.hasNonNull("withdrawn")) {
+            return;
+          }
           var status = (ObjectNode) vuln.get("status");
           if (status == null || !status.hasNonNull("affected")) {
             return;
@@ -123,6 +126,9 @@ public class TrustifyResponseHandler extends ProviderResponseHandler {
 
           affected.forEach(
               data -> {
+                if (data.hasNonNull("withdrawn")) {
+                  return;
+                }
                 var source = getSource(data);
                 if (source == null) {
                   return;
