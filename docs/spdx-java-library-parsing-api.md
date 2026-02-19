@@ -1,119 +1,114 @@
-# SPDX Java Library – Parsing API (without categories)
+# SPDX license handling in Trustify DA (SpdxLicenseService)
 
-The **spdx-java-library** (already on your classpath via `spdx-jackson-store`) provides a parsing API that is more capable than manual string splitting for SPDX license expressions. It handles both **deprecated** and **modern** forms and gives you structured metadata (FSF, OSI, deprecated, exceptions, AND/OR/WITH).
+This document describes how **Exhort / Trustify Dependency Analytics** uses the **spdx-java-library** (on the classpath via `spdx-jackson-store`) for parsing SPDX license expressions and identifying licenses. The implementation lives in `io.github.guacsec.trustifyda.integration.licenses.SpdxLicenseService`.
 
-## What you get (vs current approach)
+## Overview
 
-| Need | Your current approach | spdx-java-library |
-|------|------------------------|-------------------|
-| Deprecated IDs | Manual `-with-` / `-only` parsing, own `licenses.json` | Parses `GPL-2.0-with-classpath-exception` as a single **ListedLicense**; ID and metadata from SPDX list |
-| Modern form | No ` WITH ` handling in parser | Parses `GPL-2.0-only WITH Classpath-exception-2.0` as **WithAdditionOperator** (license + exception) |
-| OSI / FSF / deprecated | From your `licenses.json` (filtered) | **ListedLicense**: `getIsOsiApproved()`, `getIsFsfLibre()`, `getIsDeprecatedLicenseId()` (and `getDeprecatedVersion()`) |
-| Exception | Manual suffix / `exceptions.json` | **WithAdditionOperator**: `getSubjectAddition()` → **ListedLicenseException** (id, name, etc.) |
-| AND / OR structure | `split("( AND \| OR )")` | **ConjunctiveLicenseSet** (AND), **DisjunctiveLicenseSet** (OR); walk tree for each member |
+The service:
 
-So **yes**, the library can give you a parsing API that is better than the current one for: deprecated vs modern IDs, FSF/OSI/deprecated, which exception, and whether the expression is AND vs OR (and nested).
+- **Parses** SPDX expressions (deprecated and modern forms, AND/OR/WITH) using the SPDX library.
+- **Normalizes** deprecated compound IDs to the modern “license WITH exception” form before parsing.
+- **Identifies** licenses from license file text by matching the first 5 lines of the header against a hash map built from bundled SPDX license texts.
+- **Resolves categories** (permissive, weak copyleft, strong copyleft, unknown) from `license-categories.yaml`.
 
 ## Initialization
 
-Use the library’s default store (and optional config) before parsing:
+The service initializes the SPDX library on Quarkus startup:
 
 ```java
-SpdxModelFactory.init();
+void onStart(@Observes StartupEvent ev) {
+  SpdxModelFactory.init();
+  // ... load header map and license-categories.yaml in parallel
+}
 ```
 
-Optional: to avoid network and use only JAR-bundled license list:
+Optional: to avoid network and use only the JAR-bundled license list:
 
 - `-Dorg.spdx.useJARLicenseInfoOnly=true`  
-or set in `/resources/spdx-java-library.properties`.
+  or set in `/resources/spdx-java-library.properties`.
 
-## Parsing entry points
+## Parsing
 
-1. **LicenseExpressionParser** (recommended for expressions with AND/OR/WITH):
+Only **LicenseInfoFactory** is used; there is no use of `LicenseExpressionParser` or `InMemSpdxStore`.
 
-   ```java
-   IModelStore store = new InMemSpdxStore(); // or DefaultModelStore
-   AnyLicenseInfo root = LicenseExpressionParser.parseLicenseExpression(
-       expression, store, null, null, null, null);
-   ```
-
-2. **LicenseInfoFactory** (simpler when you only need a single expression parsed with default store):
-
-   ```java
-   AnyLicenseInfo root = LicenseInfoFactory.parseSPDXLicenseString(expression);
-   ```
-
-Both accept:
-
-- **Deprecated**: `"GPL-2.0-with-classpath-exception"`  
-- **Modern**: `"GPL-2.0-only WITH Classpath-exception-2.0"`  
-- **Multi**: `"MIT AND GPL-2.0-only"`, `"MIT OR Apache-2.0"`, `"(A AND B) OR C"`
-
-## Result type (AST)
-
-`AnyLicenseInfo` is the root; you need to branch on concrete type and recurse:
-
-| Type | Meaning | What to use |
-|------|--------|-------------|
-| **ListedLicense** | Single listed license (including deprecated single-id like `GPL-2.0-with-classpath-exception`) | `getId()`, `getIsOsiApproved()`, `getIsFsfLibre()`, `getIsDeprecatedLicenseId()`, `getDeprecatedVersion()`, `getName()`, etc. |
-| **WithAdditionOperator** | License WITH exception (modern form) | `getSubjectExtendableLicense()` → license (e.g. ListedLicense); `getSubjectAddition()` → exception (e.g. ListedLicenseException: id, name) |
-| **ConjunctiveLicenseSet** | AND | Members via model (e.g. get collection of members); recurse on each for AND semantics |
-| **DisjunctiveLicenseSet** | OR | Same; recurse on each for OR semantics |
-| **OrLaterOperator** | `+` (e.g. `GPL-2.0+`) | Subject license + “or later” semantics |
-
-So: **AND/OR** → ConjunctiveLicenseSet / DisjunctiveLicenseSet; **WITH** → WithAdditionOperator; **single or deprecated compound ID** → ListedLicense.
-
-## Helpers (no parsing)
-
-- **LicenseInfoFactory.getListedLicenseById(String licenseId)**  
-  Returns **ListedLicense** or null. Use for resolving an ID (including deprecated) to get OSI/FSF/deprecated without parsing an expression.
-- **LicenseInfoFactory.listedLicenseIdCaseSensitive(String)**  
-  Normalize case for an ID.
-- **LicenseInfoFactory.isSpdxListedLicenseId(String)**, **isSpdxListedExceptionId(String)**  
-  Check if ID is in the SPDX list.
-
-## Minimal example (no categories)
+Deprecated compound IDs are normalized **before** parsing so the library returns the canonical “license WITH exception” structure:
 
 ```java
-SpdxModelFactory.init();
-IModelStore store = new InMemSpdxStore();
+private static final Map<String, String> DEPRECATED_TO_CANONICAL =
+    Map.of(
+        "GPL-2.0-with-classpath-exception", "GPL-2.0-only WITH Classpath-exception-2.0",
+        "GPL-2.0-with-classpath-exception-2.0", "GPL-2.0-only WITH Classpath-exception-2.0");
 
-// Deprecated form
-AnyLicenseInfo a = LicenseExpressionParser.parseLicenseExpression(
-    "GPL-2.0-with-classpath-exception", store, null, null, null, null);
-if (a instanceof ListedLicense) {
-  ListedLicense lic = (ListedLicense) a;
-  String id = lic.getId();  // or from objectUri/toString
-  Boolean osi = lic.getIsOsiApproved();
-  Boolean fsf = lic.getIsFsfLibre();
-  Boolean deprecated = lic.getIsDeprecatedLicenseId();
-  // no separate “exception” object for deprecated form; it’s one listed license
-}
-
-// Modern form
-AnyLicenseInfo b = LicenseExpressionParser.parseLicenseExpression(
-    "GPL-2.0-only WITH Classpath-exception-2.0", store, null, null, null, null);
-if (b instanceof WithAdditionOperator) {
-  WithAdditionOperator with = (WithAdditionOperator) b;
-  ExtendableLicense subject = with.getSubjectExtendableLicense();  // e.g. ListedLicense
-  LicenseAddition addition = with.getSubjectAddition();             // e.g. ListedLicenseException
-  // subject: OSI/FSF/deprecated via getIsOsiApproved(), getIsFsfLibre(), getIsDeprecatedLicenseId()
-  // addition: exception id/name (e.g. ListedLicenseException.getId(), getName())
-}
-
-// Multi-license
-AnyLicenseInfo c = LicenseExpressionParser.parseLicenseExpression(
-    "MIT OR (GPL-2.0-only AND BSD-3-Clause)", store, null, null, null, null);
-// c is DisjunctiveLicenseSet (OR); members: MIT, ConjunctiveLicenseSet(AND); recurse to get AND/OR and each license.
+String toParse = DEPRECATED_TO_CANONICAL.getOrDefault(trimmed, trimmed);
+AnyLicenseInfo root = LicenseInfoFactory.parseSPDXLicenseString(toParse);
 ```
 
-You’d implement a small tree walk (instanceof ConjunctiveLicenseSet / DisjunctiveLicenseSet / WithAdditionOperator / ListedLicense / OrLaterOperator) to collect all licenses, exceptions, and AND vs OR.
+Accepted inputs include:
+
+- **Deprecated**: `GPL-2.0-with-classpath-exception` (normalized then parsed).
+- **Modern**: `GPL-2.0-only WITH Classpath-exception-2.0`.
+- **Multi**: `MIT AND GPL-2.0-only`, `MIT OR Apache-2.0`, `(A AND B) OR C`.
+
+Invalid expressions that do not contain AND/OR/WITH are treated as unknown single IDs and return a `LicenseInfo` with category `UNKNOWN` and a single identifier; otherwise `InvalidSPDXAnalysisException` is turned into `NotFoundException`.
+
+## AST types and accessors (spdx-java-library v3)
+
+The root type is **AnyLicenseInfo** (`org.spdx.library.model.v3_0_1.simplelicensing`). The service branches on these types from `org.spdx.library.model.v3_0_1.expandedlicensing`:
+
+| Type | Meaning | What the service uses |
+|------|--------|------------------------|
+| **ListedLicense** | Single listed license (after normalization, deprecated compound IDs are parsed as WITH form) | `toString()` → license ID; `getName().orElse(...)`; `getIsOsiApproved().orElse(null)`, `getIsFsfLibre().orElse(null)`, `getIsDeprecatedLicenseId().orElse(null)` |
+| **WithAdditionOperator** | License WITH exception (modern form) | `getSubjectExtendableLicense()` → license (e.g. ListedLicense); `getSubjectAddition()` → exception (e.g. **ListedLicenseException**: `toString()` for id, `getName().orElse(...)` for name) |
+| **ConjunctiveLicenseSet** | AND | `getMembers()` → iterate and recurse |
+| **DisjunctiveLicenseSet** | OR | `getMembers()` → iterate and recurse |
+
+Any other node type (e.g. **OrLaterOperator**) is treated as unknown and turned into a `LicenseIdentifier` with `LicenseCategory.UNKNOWN` via `toUnknownLicenseIdentifier(node.toString())`.
+
+## Service API
+
+### identifyLicense(String licenseFile)
+
+Identifies a license from raw license file text:
+
+1. **Extract header**: First 5 lines of the file, normalized (CRLF → LF, trim), stopping at the first blank line if present.
+2. **Hash**: SHA-256 of the header string.
+3. **Lookup**: The header hash map is built at startup from bundled resources `spdx-licenses/{licenseId}.json`; each file’s `licenseText` is used to compute the same header and hash.
+4. Returns a **LicenseIdentifier** for the matched listed license (no exception); throws `NotFoundException` if the header does not match.
+
+### fromLicenseId(String expression, String sourceId, String sourceUrl)
+
+Builds a **LicenseInfo** from an SPDX expression:
+
+1. Normalize deprecated IDs with `DEPRECATED_TO_CANONICAL`.
+2. Parse with `LicenseInfoFactory.parseSPDXLicenseString(toParse)`.
+3. Normalized expression: `root.toString()`.
+4. Human-readable name: tree walk (`toHumanReadableName`) over ConjunctiveLicenseSet / DisjunctiveLicenseSet / WithAdditionOperator / ListedLicense; AND/OR joined with `" AND "` / `" OR "`; WITH → subject name + `" with "` + exception name.
+5. Collect identifiers: tree walk `collectIdentifiers` → list of **LicenseIdentifier** (id, name, OSI/FSF/deprecated, category).
+6. Category: `resolveCategoryFromIdentifiers(identifiers, isOr)` using `license-categories.yaml` and “more permissive” ordering (OR: pick most permissive; AND: pick least permissive).
+7. Return **LicenseInfo** (identifiers, category, name, source, sourceUrl, expression).
+
+## Categories (license-categories.yaml)
+
+Categories are resolved by **LicenseConfig** (YAML with optional aliases):
+
+- **permissive**, **weak-copyleft**, **strong-copyleft**: lists of base license IDs (e.g. after stripping `-only` / `-or-later`).
+- **weak-copyleft-exceptions**: exception IDs that, when applied to a strong copyleft license, downgrade it to weak copyleft.
+
+Expression normalization for category lookup:
+
+- Split on ` WITH ` or `-with-` to get base license and exception suffix.
+- Strip `-only` and `-or-later` from the base license.
+- Look up base in permissive / weakCopyleft / strongCopyleft; if strong copyleft and exception is in weakCopyleftExceptions, use weak copyleft; otherwise UNKNOWN.
+
+## Helpers used from the library
+
+- **LicenseInfoFactory.parseSPDXLicenseString(String)** – parse expression to `AnyLicenseInfo`.
+- **LicenseInfoFactory.getListedLicenseById(String)** – resolve a single ID to `ListedLicense` (used after header lookup in `identifyLicense`).
+- **LicenseInfoFactory.getSpdxListedLicenseIds()** – list of IDs used to load `spdx-licenses/{id}.json` and build the header hash map.
 
 ## Summary
 
-- **Deprecated vs modern**: Both `GPL-2.0-with-classpath-exception` and `GPL-2.0-only WITH Classpath-exception-2.0` are supported; first as a single **ListedLicense**, second as **WithAdditionOperator**.
-- **FSF / OSI / deprecated**: From **ListedLicense** (and from the license inside **WithAdditionOperator**).
-- **Exception**: From **WithAdditionOperator.getSubjectAddition()** (e.g. **ListedLicenseException**).
-- **AND / OR**: From **ConjunctiveLicenseSet** and **DisjunctiveLicenseSet**; structure is in the tree, not in a single string split.
-
-So the spdx-java-library can replace your custom parsing for “parse deprecated + modern, get FSF/OSI/deprecated, exception, and AND/OR” without considering categories; categories can still be applied by you on top of this AST (e.g. from your `license-categories.yaml` by license ID and exception suffix).
+- **Parsing**: Deprecated compound IDs are normalized to “license WITH exception”, then **LicenseInfoFactory.parseSPDXLicenseString** only; no LicenseExpressionParser / InMemSpdxStore.
+- **AST**: ConjunctiveLicenseSet / DisjunctiveLicenseSet (`getMembers()`), WithAdditionOperator (`getSubjectExtendableLicense()`, `getSubjectAddition()`), ListedLicense (id, name, OSI, FSF, deprecated); other types → unknown identifier.
+- **Identification**: Header (first 5 lines) → SHA-256 → lookup in map built from bundled `spdx-licenses/*.json`.
+- **Categories**: From `license-categories.yaml` (LicenseConfig); AND/OR resolution uses “more permissive” ordering and weak-copyleft exceptions for strong copyleft + exception.

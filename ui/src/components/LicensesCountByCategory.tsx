@@ -60,8 +60,35 @@ function countByCategory(evidence: LicenseInfo[]): Record<string, number> {
   return counts;
 }
 
-export const LicensesCountByCategory = ({evidence = []}: { evidence: LicenseInfo[] }) => {
-  const counts = countByCategory(evidence);
+function countByIdentifierCategory(evidence: LicenseInfo[]): Record<string, number> {
+  const counts: Record<string, number> = {
+    PERMISSIVE: 0,
+    WEAK_COPYLEFT: 0,
+    STRONG_COPYLEFT: 0,
+    UNKNOWN: 0,
+  };
+  evidence?.forEach((info) => {
+    (info.identifiers || []).forEach((id) => {
+      const cat = (id.category || 'UNKNOWN').toUpperCase().replace(/-/g, '_');
+      if (counts.hasOwnProperty(cat)) {
+        counts[cat]++;
+      } else {
+        counts.UNKNOWN++;
+      }
+    });
+  });
+  return counts;
+}
+
+export const LicensesCountByCategory = ({
+  evidence = [],
+  countBy = 'evidence',
+}: {
+  evidence: LicenseInfo[];
+  /** 'evidence': count by each evidence's category; 'identifiers': count by each identifier's category across all evidences */
+  countBy?: 'evidence' | 'identifiers';
+}) => {
+  const counts = countBy === 'identifiers' ? countByIdentifierCategory(evidence) : countByCategory(evidence);
 
   return (
     <FlexItem>

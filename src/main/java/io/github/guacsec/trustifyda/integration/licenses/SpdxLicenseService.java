@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.camel.Body;
+import org.apache.camel.ExchangeProperty;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.spdx.core.InvalidSPDXAnalysisException;
@@ -44,6 +46,11 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.guacsec.trustifyda.api.v5.LicenseCategory;
 import io.github.guacsec.trustifyda.api.v5.LicenseIdentifier;
 import io.github.guacsec.trustifyda.api.v5.LicenseInfo;
+import io.github.guacsec.trustifyda.api.v5.LicenseProviderResult;
+import io.github.guacsec.trustifyda.api.v5.PackageLicenseResult;
+import io.github.guacsec.trustifyda.api.v5.ProviderStatus;
+import io.github.guacsec.trustifyda.integration.Constants;
+import io.github.guacsec.trustifyda.model.DependencyTree;
 import io.github.guacsec.trustifyda.model.licenses.LicenseConfig;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.runtime.util.HashUtil;
@@ -57,6 +64,7 @@ import jakarta.ws.rs.NotFoundException;
 public class SpdxLicenseService {
 
   private static final Logger LOGGER = Logger.getLogger(SpdxLicenseService.class);
+  private static final String SBOM_SOURCE = "SBOM";
   private static final String SPDX_SOURCE = "SPDX";
   private static final String SPDX_SOURCE_URL = "https://spdx.org";
 
@@ -211,6 +219,54 @@ public class SpdxLicenseService {
       return false;
     }
     return getCategoryRank(category1) > getCategoryRank(category2);
+  }
+
+  public List<LicenseProviderResult> aggregateSbomLicenses(
+      @Body LicenseProviderResult depsDevResult,
+      @ExchangeProperty(Constants.DEPENDENCY_TREE_PROPERTY) DependencyTree dependencyTree) {
+    if (dependencyTree == null
+        || dependencyTree.licenseExpressions() == null
+        || dependencyTree.licenseExpressions().isEmpty()) {
+      return List.of(depsDevResult);
+    }
+    var sbomPackages = new HashMap<String, PackageLicenseResult>();
+    dependencyTree
+        .licenseExpressions()
+        .entrySet()
+        .forEach(
+            entry -> {
+              var license = fromLicenseId(entry.getValue(), SBOM_SOURCE, null);
+              if (!entry.getKey().equals(dependencyTree.root().ref())) {
+                sbomPackages.put(
+                    entry.getKey(),
+                    new PackageLicenseResult()
+                        .evidence(List.of(license))
+                        .concluded(getConcluded(List.of(license))));
+              }
+            });
+
+    var sbomResult =
+        new LicenseProviderResult()
+            .packages(sbomPackages)
+            .summary(LicenseSummaryUtils.buildSummary(sbomPackages))
+            .status(new ProviderStatus().ok(true).name(SBOM_SOURCE).message("OK").code(200));
+
+    return List.of(sbomResult, depsDevResult);
+  }
+
+  /** The concluded license is the most permissive license in the list. */
+  public LicenseInfo getConcluded(List<LicenseInfo> infos) {
+    LicenseInfo concluded = null;
+    for (var info : infos) {
+      if (concluded == null) {
+        concluded = info;
+      } else {
+        if (!isMorePermissive(concluded.getCategory(), info.getCategory())) {
+          concluded = info;
+        }
+      }
+    }
+    return concluded;
   }
 
   private List<LicenseIdentifier> parseExpressionToIdentifiers(String expression)

@@ -13,6 +13,7 @@ const DEPRECATED_SHIELD_COLOR = '#F0AB00'; // PatternFly warning yellow
 const columnNames = {
   evidence: 'Evidence',
   expression: 'Expression',
+  identifiers: 'Identifiers',
   category: 'Category',
   status: 'Status',
 };
@@ -77,23 +78,28 @@ export const EvidenceLicensesTable = ({
       <Table variant={TableVariant.compact} aria-label="Evidence licenses">
         <Thead>
           <Tr>
-            <Th width={35}>{columnNames.evidence}</Th>
-            <Th width={25}>{columnNames.expression}</Th>
-            <Th width={25}>{columnNames.category}</Th>
-            <Th width={15}>{columnNames.status}</Th>
+            <Th width={30}>{columnNames.evidence}</Th>
+            <Th width={20}>{columnNames.expression}</Th>
+            <Th width={25}>{columnNames.identifiers}</Th>
+            <Th width={15}>{columnNames.category}</Th>
+            <Th width={10}>{columnNames.status}</Th>
           </Tr>
         </Thead>
-        <ConditionalTableBody isNoData={sortedEvidence.length === 0} numRenderedColumns={4}>
+        <ConditionalTableBody isNoData={sortedEvidence.length === 0} numRenderedColumns={5}>
           <Tbody>
             {sortedEvidence.map((info, rowIndex) => {
               const evidenceLabel = info.name || info.identifiers?.map((i) => i.name || i.id).join(', ') || info.expression || '—';
               const expression = info.expression || '—';
+              const identifierIds = info.identifiers?.map((i) => i.id) ?? [];
               const category = info.category || '—';
               const color = getCategoryColor(info.category);
               return (
                 <Tr key={rowIndex}>
                   <Td dataLabel={columnNames.evidence}>{evidenceLabel}</Td>
                   <Td dataLabel={columnNames.expression}>{expression}</Td>
+                  <Td dataLabel={columnNames.identifiers} style={{ whiteSpace: 'pre-line' }}>
+                    {identifierIds.length ? identifierIds.join('\n') : '—'}
+                  </Td>
                   <Td dataLabel={columnNames.category}>
                     {category !== '—' ? (
                       <span>

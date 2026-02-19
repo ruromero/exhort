@@ -97,8 +97,8 @@ export const LicensesTable = ({
         ),
     },
     {
-      key: 'licenses',
-      header: 'Licenses',
+      key: 'evidences',
+      header: 'Evidences',
       width: 25,
       compoundExpand: true,
       render: (item) =>
@@ -106,7 +106,7 @@ export const LicensesTable = ({
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ width: '25px' }}>{item.evidence.length}</div>
             <Divider orientation={{ default: 'vertical' }} style={{ paddingRight: '10px' }} />
-            <LicensesCountByCategory evidence={item.evidence} />
+            <LicensesCountByCategory evidence={item.evidence} countBy="identifiers" />
           </div>
         ) : (
           0
@@ -150,13 +150,13 @@ export const LicensesTable = ({
         if (expandedColumnKey === 'concluded' && item.concluded) {
           return <ConcludedLicenseDetail concluded={item.concluded} />;
         }
-        if (expandedColumnKey === 'licenses' && item.evidence?.length) {
+        if (expandedColumnKey === 'evidences' && item.evidence?.length) {
           return <EvidenceLicensesTable evidence={item.evidence} />;
         }
         return null;
       }}
       ariaLabelPrefix="Licenses"
-      expandId="licenses-compound-expand"
+      expandId="evidences-compound-expand"
       initialSortBy={{ index: 3, direction: 'desc' }}
     />
   );

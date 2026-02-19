@@ -119,7 +119,8 @@ public class LicensesIntegration extends EndpointRouteBuilder {
             .to(direct("depsDevSplitRequest"))
             .process(this::aggregateLicenseCacheHits)
         .end()
-        .transform(method(responseHandler, "toResultList"));
+        .transform(method(responseHandler, "toResult"))    
+        .transform(method(spdxLicenseService, "aggregateSbomLicenses"));
 
     from(direct("depsDevSplitRequest"))
       .routeId("depsDevSplitRequest")

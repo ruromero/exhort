@@ -51,8 +51,8 @@ export const SummaryCard = ({report, isReportMap, purl}: { report: Report, isRep
     return <img src={TrustifyIcon} alt="Trustify Icon" style={ICON_STYLE}/>;
   };
 
-  // First row: Vendor Issues + License cards (same row when possible)
-  const firstRowCount = 1 + licensesReports.length;
+  // First row: Vendor Issues + License Summary card (same row when possible)
+  const firstRowCount = 1 + (licensesReports.length > 0 ? 1 : 0);
   const firstRowSpan = Math.min(12, Math.max(1, Math.floor(12 / firstRowCount))) as GridItemProps['md'];
   
   // Second row: Remediations, Container recommendations, Explore
@@ -112,8 +112,8 @@ export const SummaryCard = ({report, isReportMap, purl}: { report: Report, isRep
           <Divider/>
         </Card>
       </GridItem>
-      {licensesReports.map((licenseReport, index) => (
-        <GridItem md={firstRowSpan} key={index}>
+      {licensesReports.length > 0 && (
+        <GridItem md={firstRowSpan}>
           <Card isFlat isFullHeight>
             <CardHeader>
               <CardTitle>
@@ -123,18 +123,23 @@ export const SummaryCard = ({report, isReportMap, purl}: { report: Report, isRep
               </CardTitle>
             </CardHeader>
             <CardBody>
-              <DescriptionListGroup style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
-                <DescriptionListTerm style={{fontSize: "large"}}>
-                  {licenseReport.status.name || "Unknown"}
-                </DescriptionListTerm>
-                <DescriptionListDescription>
-                  <LicensesChartCard summary={licenseReport.summary}/>
-                </DescriptionListDescription>
-              </DescriptionListGroup>
+              <DescriptionList isAutoFit style={{paddingTop: "10px"}}>
+                {licensesReports.map((licenseReport, index) => (
+                  <DescriptionListGroup key={index}
+                    style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+                    <DescriptionListTerm style={{fontSize: "large"}}>
+                      {licenseReport.status.name || "Unknown"}
+                    </DescriptionListTerm>
+                    <DescriptionListDescription>
+                      <LicensesChartCard summary={licenseReport.summary}/>
+                    </DescriptionListDescription>
+                  </DescriptionListGroup>
+                ))}
+              </DescriptionList>
             </CardBody>
-          </Card>&nbsp;
+          </Card>
         </GridItem>
-      ))}
+      )}
       {/* Row 2: Remediations, Container recommendations, Explore */}
       <GridItem md={secondRowSpan}>
         <Card isFlat isFullHeight>

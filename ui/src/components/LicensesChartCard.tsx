@@ -9,7 +9,7 @@ export const LicensesChartCard = ({summary}: { summary: LicenseSummary }) => {
   const strongCopyleft = summary["strongCopyleft"] ?? 0;
   const unknown = summary["unknown"] ?? 0;
   const weakCopyleft = summary["weakCopyleft"] ?? 0;
-  const concluded = summary["concluded"] ?? 0;
+  const total = summary["total"] ?? 0;
 
   const hasValues = permissive + strongCopyleft + unknown + weakCopyleft > 0;
 
@@ -42,8 +42,8 @@ export const LicensesChartCard = ({summary}: { summary: LicenseSummary }) => {
                 left: 0,
                 right: 160, // Adjusted to accommodate legend
               }}
-              subTitle="Concluded licenses"
-              title={`${concluded}`}
+              subTitle="Total licenses"
+              title={`${total}`}
               width={350}
               colorScale={Object.values(CATEGORY_COLORS)}
             />

@@ -20,11 +20,7 @@ package io.github.guacsec.trustifyda.integration.licenses;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.camel.Exchange;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -35,11 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.github.guacsec.trustifyda.api.v5.LicenseCategory;
-import io.github.guacsec.trustifyda.api.v5.LicenseIdentifier;
 import io.github.guacsec.trustifyda.api.v5.LicenseInfo;
 import io.github.guacsec.trustifyda.api.v5.LicenseProviderResult;
-import io.github.guacsec.trustifyda.api.v5.LicensesSummary;
 import io.github.guacsec.trustifyda.api.v5.PackageLicenseResult;
 import io.github.guacsec.trustifyda.api.v5.ProviderStatus;
 import io.github.guacsec.trustifyda.integration.backend.BackendUtils;
@@ -84,7 +77,6 @@ public class DepsDevResponseHandler {
             var request = (ObjectNode) response.get("request");
             var purl = request.get("purl").asText();
             if (response.has("result")) {
-
               var result = (ObjectNode) response.get("result");
               if (result.has("version")) {
                 var version = result.get("version");
@@ -98,9 +90,10 @@ public class DepsDevResponseHandler {
                     });
               }
             }
-
             var packageResult =
-                new PackageLicenseResult().concluded(getConcluded(infos)).evidence(infos);
+                new PackageLicenseResult()
+                    .concluded(spdxLicenseService.getConcluded(infos))
+                    .evidence(infos);
             results.put(purl, packageResult);
           });
       exchange
@@ -143,13 +136,13 @@ public class DepsDevResponseHandler {
     return !oldResult.status().getOk() ? oldResult.status() : newResult.status();
   }
 
-  public List<LicenseProviderResult> toResultList(LicenseSplitResult results) {
+  public LicenseProviderResult toResult(LicenseSplitResult results) {
     var response = new LicenseProviderResult();
     response.packages(results.packages());
-    response.summary(buildSummary(results.packages()));
+    response.summary(LicenseSummaryUtils.buildSummary(results.packages()));
     response.status(results.status());
 
-    return List.of(response);
+    return response;
   }
 
   public void processResponseError(Exchange exchange) {
@@ -164,71 +157,5 @@ public class DepsDevResponseHandler {
         "Unable to process request to Deps.dev licenses API: %s", result.mapping().message());
     monitoringProcessor.processProviderError(exchange, result.exception(), DEPS_DEV_SOURCE);
     exchange.getMessage().setBody(new LicenseSplitResult(status, Collections.emptyMap()));
-  }
-
-  private LicensesSummary buildSummary(Map<String, PackageLicenseResult> results) {
-    List<LicenseInfo> allInfos =
-        results.values().stream()
-            .map(PackageLicenseResult::getEvidence)
-            .flatMap(List::stream)
-            .filter(Objects::nonNull)
-            .toList();
-    Map<String, Long> summaryCount =
-        allInfos.stream()
-            .filter(Objects::nonNull)
-            .flatMap(
-                info ->
-                    (info.getIdentifiers() != null
-                            ? info.getIdentifiers()
-                            : List.<LicenseIdentifier>of())
-                        .stream())
-            .filter(Objects::nonNull)
-            .flatMap(
-                id -> {
-                  List<String> labels = new ArrayList<>();
-                  if (Boolean.TRUE.equals(id.getIsDeprecated())) {
-                    labels.add("DEPRECATED");
-                  }
-                  if (Boolean.TRUE.equals(id.getIsOsiApproved())) {
-                    labels.add("OSI_APPROVED");
-                  }
-                  if (Boolean.TRUE.equals(id.getIsFsfLibre())) {
-                    labels.add("FSF_LIBRE");
-                  }
-                  if (id.getCategory() != null) {
-                    labels.add(id.getCategory().name());
-                  }
-                  labels.add("TOTAL");
-                  return labels.stream();
-                })
-            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
-    return new LicensesSummary()
-        .total(summaryCount.getOrDefault("TOTAL", 0L).intValue())
-        .concluded(results.size())
-        .permissive(summaryCount.getOrDefault(LicenseCategory.PERMISSIVE.name(), 0L).intValue())
-        .weakCopyleft(
-            summaryCount.getOrDefault(LicenseCategory.WEAK_COPYLEFT.name(), 0L).intValue())
-        .strongCopyleft(
-            summaryCount.getOrDefault(LicenseCategory.STRONG_COPYLEFT.name(), 0L).intValue())
-        .unknown(summaryCount.getOrDefault(LicenseCategory.UNKNOWN.name(), 0L).intValue())
-        .fsfLibre(summaryCount.getOrDefault("FSF_LIBRE", 0L).intValue())
-        .osiApproved(summaryCount.getOrDefault("OSI_APPROVED", 0L).intValue())
-        .deprecated(summaryCount.getOrDefault("DEPRECATED", 0L).intValue());
-  }
-
-  /** The concluded license is the most permissive license in the list. */
-  private LicenseInfo getConcluded(List<LicenseInfo> infos) {
-    LicenseInfo concluded = null;
-    for (var info : infos) {
-      if (concluded == null) {
-        concluded = info;
-      } else {
-        if (!spdxLicenseService.isMorePermissive(concluded.getCategory(), info.getCategory())) {
-          concluded = info;
-        }
-      }
-    }
-    return concluded;
   }
 }
