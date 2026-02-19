@@ -10,6 +10,8 @@ import { extractDependencyVersion } from '../utils/utils';
 import { ConcludedLicenseDetail } from './ConcludedLicenseDetail';
 import { EvidenceLicensesTable } from './EvidenceLicensesTable';
 
+const DEPRECATED_SHIELD_COLOR = '#F0AB00'; // PatternFly warning yellow
+
 export interface LicenseTableRow {
   ref: string;
   concluded: LicensePackageReport['concluded'];
@@ -55,10 +57,21 @@ export const LicensesTable = ({
       width: 20,
       sortIndex: 2,
       compoundExpand: true,
-      render: (item) =>
-        item.concluded
-          ? item.concluded.expression || item.concluded.name || '—'
-          : '—',
+      render: (item) => {
+        if (!item.concluded) return '—';
+        const label = item.concluded.expression || item.concluded.name || '—';
+        const isDeprecated = item.concluded.identifiers?.some((i) => i.isDeprecated === true);
+        return (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {isDeprecated && (
+              <Icon isInline title="Concluded license is deprecated">
+                <SecurityIcon style={{ fill: DEPRECATED_SHIELD_COLOR, height: '13px' }} />
+              </Icon>
+            )}
+            {label}
+          </span>
+        );
+      },
     },
     {
       key: 'category',

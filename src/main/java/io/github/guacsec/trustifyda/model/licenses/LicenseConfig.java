@@ -25,4 +25,4 @@ public record LicenseConfig(
     @JsonAlias("permissive") List<String> permissive,
     @JsonAlias("weak-copyleft") List<String> weakCopyleft,
     @JsonAlias("strong-copyleft") List<String> strongCopyleft,
-    @JsonAlias("exception-suffixes") List<String> exceptionSuffixes) {}
+    @JsonAlias("weak-copyleft-exceptions") List<String> weakCopyleftExceptions) {}

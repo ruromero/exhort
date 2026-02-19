@@ -6,9 +6,9 @@ import {CATEGORY_COLORS} from './LicensesCountByCategory';
 export const LicensesChartCard = ({summary}: { summary: LicenseSummary }) => {
 
   const permissive = summary["permissive"] ?? 0;
-  const strongCopyleft = summary["strong-copyleft"] ?? 0;
+  const strongCopyleft = summary["strongCopyleft"] ?? 0;
   const unknown = summary["unknown"] ?? 0;
-  const weakCopyleft = summary["weak-copyleft"] ?? 0;
+  const weakCopyleft = summary["weakCopyleft"] ?? 0;
   const concluded = summary["concluded"] ?? 0;
 
   const hasValues = permissive + strongCopyleft + unknown + weakCopyleft > 0;

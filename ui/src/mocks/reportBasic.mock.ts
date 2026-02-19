@@ -4,8 +4,8 @@ export const reportBasic: AppData = {
   providerPrivateData: null,
   report: {
     "scanned": {
-      "total": 9,
-      "direct": 2,
+      "total": 10,
+      "direct": 3,
       "transitive": 7
     },
     "providers": {
@@ -15,10 +15,14 @@ export const reportBasic: AppData = {
           "name": "trustify",
           "code": 200,
           "message": "OK",
-          "warnings": {}
+          "warnings": {
+            "pkg:maven/io.quarkus/quarkus-jdbc-h2@2.13.5.Final?type=jar": [
+              "I don't like this package"
+            ]
+          }
         },
         "sources": {
-          "osv": {
+          "osv-github": {
             "summary": {
               "direct": 0,
               "transitive": 7,
@@ -29,7 +33,8 @@ export const reportBasic: AppData = {
               "medium": 2,
               "low": 0,
               "remediations": 2,
-              "recommendations": 6
+              "recommendations": 6,
+              "unscanned": 0
             },
             "dependencies": [
               {
@@ -41,7 +46,7 @@ export const reportBasic: AppData = {
                       {
                         "id": "CVE-2024-1597",
                         "title": "pgjdbc SQL Injection via line comment generation",
-                        "source": "osv",
+                        "source": "osv-github",
                         "cvssScore": 10.0,
                         "severity": "CRITICAL",
                         "cves": [
@@ -52,7 +57,7 @@ export const reportBasic: AppData = {
                       {
                         "id": "CVE-2022-41946",
                         "title": "TemporaryFolder on unix-like systems does not limit access to created files in pgjdbc",
-                        "source": "osv",
+                        "source": "osv-github",
                         "cvssScore": 5.8,
                         "severity": "MEDIUM",
                         "cves": [
@@ -64,7 +69,7 @@ export const reportBasic: AppData = {
                     "highestVulnerability": {
                       "id": "CVE-2024-1597",
                       "title": "pgjdbc SQL Injection via line comment generation",
-                      "source": "osv",
+                      "source": "osv-github",
                       "cvssScore": 10.0,
                       "severity": "CRITICAL",
                       "cves": [
@@ -78,7 +83,7 @@ export const reportBasic: AppData = {
                 "highestVulnerability": {
                   "id": "CVE-2024-1597",
                   "title": "pgjdbc SQL Injection via line comment generation",
-                  "source": "osv",
+                  "source": "osv-github",
                   "cvssScore": 10.0,
                   "severity": "CRITICAL",
                   "cves": [
@@ -96,7 +101,7 @@ export const reportBasic: AppData = {
                       {
                         "id": "CVE-2020-36518",
                         "title": "jackson-databind before 2.13.0 allows a Java StackOverflow exception and denial of service via a large depth of nested objects.",
-                        "source": "osv",
+                        "source": "osv-github",
                         "cvssScore": 8.2,
                         "severity": "HIGH",
                         "cves": [
@@ -114,7 +119,7 @@ export const reportBasic: AppData = {
                       {
                         "id": "CVE-2022-42003",
                         "title": "In FasterXML jackson-databind before versions 2.13.4.1 and 2.12.17.1, resource exhaustion can occur because of a lack of a check in primitive value deserializers to avoid deep wrapper array nesting, when the UNWRAP_SINGLE_VALUE_ARRAYS feature is enabled.",
-                        "source": "osv",
+                        "source": "osv-github",
                         "cvssScore": 8.2,
                         "severity": "HIGH",
                         "cves": [
@@ -125,7 +130,7 @@ export const reportBasic: AppData = {
                       {
                         "id": "CVE-2022-42004",
                         "title": "In FasterXML jackson-databind before 2.13.4, resource exhaustion can occur because of a lack of a check in BeanDeserializer._deserializeFromArray to prevent use of deeply nested arrays. An application is vulnerable only with certain customized choices for deserialization.",
-                        "source": "osv",
+                        "source": "osv-github",
                         "cvssScore": 8.2,
                         "severity": "HIGH",
                         "cves": [
@@ -137,7 +142,7 @@ export const reportBasic: AppData = {
                     "highestVulnerability": {
                       "id": "CVE-2020-36518",
                       "title": "jackson-databind before 2.13.0 allows a Java StackOverflow exception and denial of service via a large depth of nested objects.",
-                      "source": "osv",
+                      "source": "osv-github",
                       "cvssScore": 8.2,
                       "severity": "HIGH",
                       "cves": [
@@ -159,7 +164,7 @@ export const reportBasic: AppData = {
                       {
                         "id": "CVE-2024-2700",
                         "title": "Quarkus-core: leak of local configuration properties into quarkus applications",
-                        "source": "osv",
+                        "source": "osv-github",
                         "cvssScore": 7.0,
                         "severity": "HIGH",
                         "cves": [
@@ -170,7 +175,7 @@ export const reportBasic: AppData = {
                       {
                         "id": "CVE-2023-2974",
                         "title": "Quarkus-core: tls protocol configured with quarkus.http.ssl.protocols is not enforced, client can enforce weaker supported tls protocol",
-                        "source": "osv",
+                        "source": "osv-github",
                         "cvssScore": 6.7,
                         "severity": "MEDIUM",
                         "cves": [
@@ -189,7 +194,7 @@ export const reportBasic: AppData = {
                     "highestVulnerability": {
                       "id": "CVE-2024-2700",
                       "title": "Quarkus-core: leak of local configuration properties into quarkus applications",
-                      "source": "osv",
+                      "source": "osv-github",
                       "cvssScore": 7.0,
                       "severity": "HIGH",
                       "cves": [
@@ -203,7 +208,7 @@ export const reportBasic: AppData = {
                 "highestVulnerability": {
                   "id": "CVE-2020-36518",
                   "title": "jackson-databind before 2.13.0 allows a Java StackOverflow exception and denial of service via a large depth of nested objects.",
-                  "source": "osv",
+                  "source": "osv-github",
                   "cvssScore": 8.2,
                   "severity": "HIGH",
                   "cves": [
@@ -237,7 +242,7 @@ export const reportBasic: AppData = {
               }
             ]
           },
-          "csaf": {
+          "redhat-csaf": {
             "summary": {
               "direct": 0,
               "transitive": 2,
@@ -261,7 +266,7 @@ export const reportBasic: AppData = {
                       {
                         "id": "CVE-2024-1597",
                         "title": "pgjdbc SQL Injection via line comment generation",
-                        "source": "csaf",
+                        "source": "redhat-csaf",
                         "cvssScore": 9.8,
                         "severity": "CRITICAL",
                         "cves": [
@@ -273,7 +278,7 @@ export const reportBasic: AppData = {
                     "highestVulnerability": {
                       "id": "CVE-2024-1597",
                       "title": "pgjdbc SQL Injection via line comment generation",
-                      "source": "csaf",
+                      "source": "redhat-csaf",
                       "cvssScore": 9.8,
                       "severity": "CRITICAL",
                       "cves": [
@@ -287,7 +292,7 @@ export const reportBasic: AppData = {
                 "highestVulnerability": {
                   "id": "CVE-2024-1597",
                   "title": "pgjdbc SQL Injection via line comment generation",
-                  "source": "csaf",
+                  "source": "redhat-csaf",
                   "cvssScore": 9.8,
                   "severity": "CRITICAL",
                   "cves": [
@@ -305,7 +310,7 @@ export const reportBasic: AppData = {
                       {
                         "id": "CVE-2024-2700",
                         "title": "Quarkus-core: leak of local configuration properties into quarkus applications",
-                        "source": "csaf",
+                        "source": "redhat-csaf",
                         "cvssScore": 7.0,
                         "severity": "HIGH",
                         "cves": [
@@ -317,7 +322,7 @@ export const reportBasic: AppData = {
                     "highestVulnerability": {
                       "id": "CVE-2024-2700",
                       "title": "Quarkus-core: leak of local configuration properties into quarkus applications",
-                      "source": "csaf",
+                      "source": "redhat-csaf",
                       "cvssScore": 7.0,
                       "severity": "HIGH",
                       "cves": [
@@ -331,7 +336,7 @@ export const reportBasic: AppData = {
                 "highestVulnerability": {
                   "id": "CVE-2024-2700",
                   "title": "Quarkus-core: leak of local configuration properties into quarkus applications",
-                  "source": "csaf",
+                  "source": "redhat-csaf",
                   "cvssScore": 7.0,
                   "severity": "HIGH",
                   "cves": [
@@ -378,145 +383,25 @@ export const reportBasic: AppData = {
           "total": 12,
           "concluded": 10,
           "permissive": 8,
-          "weak-copyleft": 2,
-          "strong-copyleft": 0,
-          "unknown": 0
+          "weakCopyleft": 2,
+          "strongCopyleft": 0,
+          "unknown": 2,
+          "deprecated": 0,
+          "osiApproved": 10,
+          "fsfLibre": 10
         },
         "packages": {
           "pkg:maven/io.quarkus/quarkus-core@2.13.5.Final": {
             "concluded": {
               "identifiers": [
-                "Apache-2.0"
-              ],
-              "expression": "Apache-2.0",
-              "name": "The Apache Software License, Version 2.0",
-              "category": "PERMISSIVE",
-              "source": "deps.dev",
-              "sourceUrl": "https://api.deps.dev"
-            },
-            "evidence": [
-              {
-                "identifiers": [
-                  "Apache-2.0"
-                ],
-                "expression": "Apache-2.0",
-                "name": "The Apache Software License, Version 2.0",
-                "category": "PERMISSIVE",
-                "source": "deps.dev",
-                "sourceUrl": "https://api.deps.dev"
-              }
-            ]
-          },
-          "pkg:maven/io.quarkus/quarkus-jdbc-h2@2.13.5.Final": {
-            "concluded": {
-              "identifiers": [
-                "Apache-2.0"
-              ],
-              "expression": "Apache-2.0",
-              "name": "The Apache Software License, Version 2.0",
-              "category": "PERMISSIVE",
-              "source": "deps.dev",
-              "sourceUrl": "https://api.deps.dev"
-            },
-            "evidence": [
-              {
-                "identifiers": [
-                  "Apache-2.0"
-                ],
-                "expression": "Apache-2.0",
-                "name": "The Apache Software License, Version 2.0",
-                "category": "PERMISSIVE",
-                "source": "deps.dev",
-                "sourceUrl": "https://api.deps.dev"
-              }
-            ]
-          },
-          "pkg:maven/io.quarkus/quarkus-narayana-jta@2.13.5.Final": {
-            "concluded": {
-              "identifiers": [
-                "Apache-2.0"
-              ],
-              "expression": "Apache-2.0",
-              "name": "The Apache Software License, Version 2.0",
-              "category": "PERMISSIVE",
-              "source": "deps.dev",
-              "sourceUrl": "https://api.deps.dev"
-            },
-            "evidence": [
-              {
-                "identifiers": [
-                  "Apache-2.0"
-                ],
-                "expression": "Apache-2.0",
-                "name": "The Apache Software License, Version 2.0",
-                "category": "PERMISSIVE",
-                "source": "deps.dev",
-                "sourceUrl": "https://api.deps.dev"
-              }
-            ]
-          },
-          "pkg:maven/jakarta.interceptor/jakarta.interceptor-api@1.2.5": {
-            "concluded": {
-              "identifiers": [
-                "GPL-2.0-with-classpath-exception"
-              ],
-              "expression": "GPL-2.0-with-classpath-exception",
-              "name": "GPL2 w/ CPE",
-              "category": "WEAK_COPYLEFT",
-              "source": "deps.dev",
-              "sourceUrl": "https://api.deps.dev"
-            },
-            "evidence": [
-              {
-                "identifiers": [
-                  "non-standard"
-                ],
-                "expression": "non-standard",
-                "name": "EPL 2.0",
-                "category": "UNKNOWN",
-                "source": "deps.dev",
-                "sourceUrl": "https://api.deps.dev"
-              },
-              {
-                "identifiers": [
-                  "GPL-2.0-with-classpath-exception"
-                ],
-                "expression": "GPL-2.0-with-classpath-exception",
-                "name": "GPL2 w/ CPE",
-                "category": "WEAK_COPYLEFT",
-                "source": "deps.dev",
-                "sourceUrl": "https://api.deps.dev"
-              }
-            ]
-          },
-          "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.1": {
-            "concluded": {
-              "identifiers": [
-                "Apache-2.0"
-              ],
-              "expression": "Apache-2.0",
-              "name": "The Apache Software License, Version 2.0",
-              "category": "PERMISSIVE",
-              "source": "deps.dev",
-              "sourceUrl": "https://api.deps.dev"
-            },
-            "evidence": [
-              {
-                "identifiers": [
-                  "Apache-2.0"
-                ],
-                "expression": "Apache-2.0",
-                "name": "The Apache Software License, Version 2.0",
-                "category": "PERMISSIVE",
-                "source": "deps.dev",
-                "sourceUrl": "https://api.deps.dev"
-              }
-            ]
-          },
-          "pkg:maven/jakarta.enterprise/jakarta.enterprise.cdi-api@2.0.2": {
-            "concluded": {
-              "identifiers": [
-                "Apache-2.0"
+                {
+                  "id": "Apache-2.0",
+                  "name": "Apache License 2.0",
+                  "isDeprecated": false,
+                  "isOsiApproved": true,
+                  "isFsfLibre": true,
+                  "category": "PERMISSIVE"
+                }
               ],
               "expression": "Apache-2.0",
               "name": "Apache License 2.0",
@@ -527,7 +412,218 @@ export const reportBasic: AppData = {
             "evidence": [
               {
                 "identifiers": [
-                  "Apache-2.0"
+                  {
+                    "id": "Apache-2.0",
+                    "name": "Apache License 2.0",
+                    "isDeprecated": false,
+                    "isOsiApproved": true,
+                    "isFsfLibre": true,
+                    "category": "PERMISSIVE"
+                  }
+                ],
+                "expression": "Apache-2.0",
+                "name": "Apache License 2.0",
+                "category": "PERMISSIVE",
+                "source": "deps.dev",
+                "sourceUrl": "https://api.deps.dev"
+              }
+            ]
+          },
+          "pkg:maven/io.quarkus/quarkus-jdbc-h2@2.13.5.Final": {
+            "concluded": {
+              "identifiers": [
+                {
+                  "id": "Apache-2.0",
+                  "name": "Apache License 2.0",
+                  "isDeprecated": false,
+                  "isOsiApproved": true,
+                  "isFsfLibre": true,
+                  "category": "PERMISSIVE"
+                }
+              ],
+              "expression": "Apache-2.0",
+              "name": "Apache License 2.0",
+              "category": "PERMISSIVE",
+              "source": "deps.dev",
+              "sourceUrl": "https://api.deps.dev"
+            },
+            "evidence": [
+              {
+                "identifiers": [
+                  {
+                    "id": "Apache-2.0",
+                    "name": "Apache License 2.0",
+                    "isDeprecated": false,
+                    "isOsiApproved": true,
+                    "isFsfLibre": true,
+                    "category": "PERMISSIVE"
+                  }
+                ],
+                "expression": "Apache-2.0",
+                "name": "Apache License 2.0",
+                "category": "PERMISSIVE",
+                "source": "deps.dev",
+                "sourceUrl": "https://api.deps.dev"
+              }
+            ]
+          },
+          "pkg:maven/io.quarkus/quarkus-narayana-jta@2.13.5.Final": {
+            "concluded": {
+              "identifiers": [
+                {
+                  "id": "Apache-2.0",
+                  "name": "Apache License 2.0",
+                  "isDeprecated": false,
+                  "isOsiApproved": true,
+                  "isFsfLibre": true,
+                  "category": "PERMISSIVE"
+                }
+              ],
+              "expression": "Apache-2.0",
+              "name": "Apache License 2.0",
+              "category": "PERMISSIVE",
+              "source": "deps.dev",
+              "sourceUrl": "https://api.deps.dev"
+            },
+            "evidence": [
+              {
+                "identifiers": [
+                  {
+                    "id": "Apache-2.0",
+                    "name": "Apache License 2.0",
+                    "isDeprecated": false,
+                    "isOsiApproved": true,
+                    "isFsfLibre": true,
+                    "category": "PERMISSIVE"
+                  }
+                ],
+                "expression": "Apache-2.0",
+                "name": "Apache License 2.0",
+                "category": "PERMISSIVE",
+                "source": "deps.dev",
+                "sourceUrl": "https://api.deps.dev"
+              }
+            ]
+          },
+          "pkg:maven/jakarta.interceptor/jakarta.interceptor-api@1.2.5": {
+            "concluded": {
+              "identifiers": [
+                {
+                  "id": "GPL-2.0-only WITH Classpath-exception-2.0",
+                  "name": "GNU General Public License v2.0 only with Classpath exception 2.0",
+                  "isDeprecated": false,
+                  "isOsiApproved": true,
+                  "isFsfLibre": true,
+                  "category": "WEAK_COPYLEFT"
+                }
+              ],
+              "expression": "GPL-2.0-only WITH Classpath-exception-2.0",
+              "name": "GNU General Public License v2.0 only with Classpath exception 2.0",
+              "category": "WEAK_COPYLEFT",
+              "source": "deps.dev",
+              "sourceUrl": "https://api.deps.dev"
+            },
+            "evidence": [
+              {
+                "identifiers": [
+                  {
+                    "id": "non-standard",
+                    "name": "non-standard",
+                    "category": "UNKNOWN"
+                  }
+                ],
+                "expression": "non-standard",
+                "name": "non-standard",
+                "category": "UNKNOWN",
+                "source": "deps.dev",
+                "sourceUrl": "https://api.deps.dev"
+              },
+              {
+                "identifiers": [
+                  {
+                    "id": "GPL-2.0-only WITH Classpath-exception-2.0",
+                    "name": "GNU General Public License v2.0 only with Classpath exception 2.0",
+                    "isDeprecated": true,
+                    "isOsiApproved": true,
+                    "isFsfLibre": true,
+                    "category": "WEAK_COPYLEFT"
+                  }
+                ],
+                "expression": "GPL-2.0-only WITH Classpath-exception-2.0",
+                "name": "GNU General Public License v2.0 only with Classpath exception 2.0",
+                "category": "WEAK_COPYLEFT",
+                "source": "deps.dev",
+                "sourceUrl": "https://api.deps.dev"
+              }
+            ]
+          },
+          "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.1": {
+            "concluded": {
+              "identifiers": [
+                {
+                  "id": "Apache-2.0",
+                  "name": "Apache License 2.0",
+                  "isDeprecated": false,
+                  "isOsiApproved": true,
+                  "isFsfLibre": true,
+                  "category": "PERMISSIVE"
+                }
+              ],
+              "expression": "Apache-2.0",
+              "name": "Apache License 2.0",
+              "category": "PERMISSIVE",
+              "source": "deps.dev",
+              "sourceUrl": "https://api.deps.dev"
+            },
+            "evidence": [
+              {
+                "identifiers": [
+                  {
+                    "id": "Apache-2.0",
+                    "name": "Apache License 2.0",
+                    "isDeprecated": false,
+                    "isOsiApproved": true,
+                    "isFsfLibre": true,
+                    "category": "PERMISSIVE"
+                  }
+                ],
+                "expression": "Apache-2.0",
+                "name": "Apache License 2.0",
+                "category": "PERMISSIVE",
+                "source": "deps.dev",
+                "sourceUrl": "https://api.deps.dev"
+              }
+            ]
+          },
+          "pkg:maven/jakarta.enterprise/jakarta.enterprise.cdi-api@2.0.2": {
+            "concluded": {
+              "identifiers": [
+                {
+                  "id": "Apache-2.0",
+                  "name": "Apache License 2.0",
+                  "isDeprecated": true,
+                  "isOsiApproved": true,
+                  "isFsfLibre": true,
+                  "category": "PERMISSIVE"
+                }
+              ],
+              "expression": "Apache-2.0",
+              "name": "Apache License 2.0",
+              "category": "PERMISSIVE",
+              "source": "deps.dev",
+              "sourceUrl": "https://api.deps.dev"
+            },
+            "evidence": [
+              {
+                "identifiers": [
+                  {
+                    "id": "Apache-2.0",
+                    "name": "Apache License 2.0",
+                    "isDeprecated": true,
+                    "isOsiApproved": true,
+                    "isFsfLibre": true,
+                    "category": "PERMISSIVE"
+                  }
                 ],
                 "expression": "Apache-2.0",
                 "name": "Apache License 2.0",
@@ -540,10 +636,17 @@ export const reportBasic: AppData = {
           "pkg:maven/jakarta.el/jakarta.el-api@3.0.3": {
             "concluded": {
               "identifiers": [
-                "GPL-2.0-with-classpath-exception"
+                {
+                  "id": "GPL-2.0-only WITH Classpath-exception-2.0",
+                  "name": "GNU General Public License v2.0 only with Classpath exception 2.0",
+                  "isDeprecated": false,
+                  "isOsiApproved": true,
+                  "isFsfLibre": true,
+                  "category": "WEAK_COPYLEFT"
+                }
               ],
-              "expression": "GPL-2.0-with-classpath-exception",
-              "name": "GPL2 w/ CPE",
+              "expression": "GPL-2.0-only WITH Classpath-exception-2.0",
+              "name": "GNU General Public License v2.0 only with Classpath exception 2.0",
               "category": "WEAK_COPYLEFT",
               "source": "deps.dev",
               "sourceUrl": "https://api.deps.dev"
@@ -551,20 +654,31 @@ export const reportBasic: AppData = {
             "evidence": [
               {
                 "identifiers": [
-                  "non-standard"
+                  {
+                    "id": "non-standard",
+                    "name": "non-standard",
+                    "category": "UNKNOWN"
+                  }
                 ],
                 "expression": "non-standard",
-                "name": "EPL 2.0",
+                "name": "non-standard",
                 "category": "UNKNOWN",
                 "source": "deps.dev",
                 "sourceUrl": "https://api.deps.dev"
               },
               {
                 "identifiers": [
-                  "GPL-2.0-with-classpath-exception"
+                  {
+                    "id": "GPL-2.0-only WITH Classpath-exception-2.0",
+                    "name": "GNU General Public License v2.0 only with Classpath exception 2.0",
+                    "isDeprecated": false,
+                    "isOsiApproved": true,
+                    "isFsfLibre": true,
+                    "category": "WEAK_COPYLEFT"
+                  }
                 ],
-                "expression": "GPL-2.0-with-classpath-exception",
-                "name": "GPL2 w/ CPE",
+                "expression": "GPL-2.0-only WITH Classpath-exception-2.0",
+                "name": "GNU General Public License v2.0 only with Classpath exception 2.0",
                 "category": "WEAK_COPYLEFT",
                 "source": "deps.dev",
                 "sourceUrl": "https://api.deps.dev"
@@ -574,10 +688,17 @@ export const reportBasic: AppData = {
           "pkg:maven/io.quarkus/quarkus-jdbc-postgresql@2.13.5.Final": {
             "concluded": {
               "identifiers": [
-                "Apache-2.0"
+                {
+                  "id": "Apache-2.0",
+                  "name": "Apache License 2.0",
+                  "isDeprecated": false,
+                  "isOsiApproved": true,
+                  "isFsfLibre": true,
+                  "category": "PERMISSIVE"
+                }
               ],
               "expression": "Apache-2.0",
-              "name": "The Apache Software License, Version 2.0",
+              "name": "Apache License 2.0",
               "category": "PERMISSIVE",
               "source": "deps.dev",
               "sourceUrl": "https://api.deps.dev"
@@ -585,10 +706,17 @@ export const reportBasic: AppData = {
             "evidence": [
               {
                 "identifiers": [
-                  "Apache-2.0"
+                  {
+                    "id": "Apache-2.0",
+                    "name": "Apache License 2.0",
+                    "isDeprecated": false,
+                    "isOsiApproved": true,
+                    "isFsfLibre": true,
+                    "category": "PERMISSIVE"
+                  }
                 ],
                 "expression": "Apache-2.0",
-                "name": "The Apache Software License, Version 2.0",
+                "name": "Apache License 2.0",
                 "category": "PERMISSIVE",
                 "source": "deps.dev",
                 "sourceUrl": "https://api.deps.dev"
@@ -598,10 +726,17 @@ export const reportBasic: AppData = {
           "pkg:maven/org.postgresql/postgresql@42.5.0": {
             "concluded": {
               "identifiers": [
-                "BSD-2-Clause"
+                {
+                  "id": "BSD-2-Clause",
+                  "name": "BSD 2-Clause \"Simplified\" License",
+                  "isDeprecated": false,
+                  "isOsiApproved": true,
+                  "isFsfLibre": true,
+                  "category": "PERMISSIVE"
+                }
               ],
               "expression": "BSD-2-Clause",
-              "name": "BSD-2-Clause",
+              "name": "BSD 2-Clause \"Simplified\" License",
               "category": "PERMISSIVE",
               "source": "deps.dev",
               "sourceUrl": "https://api.deps.dev"
@@ -609,10 +744,17 @@ export const reportBasic: AppData = {
             "evidence": [
               {
                 "identifiers": [
-                  "BSD-2-Clause"
+                  {
+                    "id": "BSD-2-Clause",
+                    "name": "BSD 2-Clause \"Simplified\" License",
+                    "isDeprecated": false,
+                    "isOsiApproved": true,
+                    "isFsfLibre": true,
+                    "category": "PERMISSIVE"
+                  }
                 ],
                 "expression": "BSD-2-Clause",
-                "name": "BSD-2-Clause",
+                "name": "BSD 2-Clause \"Simplified\" License",
                 "category": "PERMISSIVE",
                 "source": "deps.dev",
                 "sourceUrl": "https://api.deps.dev"
@@ -622,10 +764,17 @@ export const reportBasic: AppData = {
           "pkg:maven/io.quarkus/quarkus-hibernate-orm@2.13.5.Final": {
             "concluded": {
               "identifiers": [
-                "Apache-2.0"
+                {
+                  "id": "Apache-2.0",
+                  "name": "Apache License 2.0",
+                  "isDeprecated": false,
+                  "isOsiApproved": true,
+                  "isFsfLibre": true,
+                  "category": "PERMISSIVE"
+                }
               ],
               "expression": "Apache-2.0",
-              "name": "The Apache Software License, Version 2.0",
+              "name": "Apache License 2.0",
               "category": "PERMISSIVE",
               "source": "deps.dev",
               "sourceUrl": "https://api.deps.dev"
@@ -633,10 +782,17 @@ export const reportBasic: AppData = {
             "evidence": [
               {
                 "identifiers": [
-                  "Apache-2.0"
+                  {
+                    "id": "Apache-2.0",
+                    "name": "Apache License 2.0",
+                    "isDeprecated": false,
+                    "isOsiApproved": true,
+                    "isFsfLibre": true,
+                    "category": "PERMISSIVE"
+                  }
                 ],
                 "expression": "Apache-2.0",
-                "name": "The Apache Software License, Version 2.0",
+                "name": "Apache License 2.0",
                 "category": "PERMISSIVE",
                 "source": "deps.dev",
                 "sourceUrl": "https://api.deps.dev"

@@ -2,7 +2,7 @@ import {Card, DescriptionList, DescriptionListDescription, DescriptionListGroup,
 import {LicenseInfo} from '../api/report';
 import {getCategoryLabel} from './LicensesCountByCategory';
 
-export const ConcludedLicenseDetail = ({concluded}: { concluded: LicenseInfo }) => {
+export const ConcludedLicenseDetail = ({concluded}: {concluded: LicenseInfo}) => {
   return (
     <Card style={{backgroundColor: 'var(--pf-v5-global--BackgroundColor--100)'}}>
       <DescriptionList>
@@ -16,7 +16,9 @@ export const ConcludedLicenseDetail = ({concluded}: { concluded: LicenseInfo }) 
         </DescriptionListGroup>
         <DescriptionListGroup>
           <DescriptionListTerm>Category</DescriptionListTerm>
-          <DescriptionListDescription>{concluded.category ? getCategoryLabel(concluded.category) : '—'}</DescriptionListDescription>
+          <DescriptionListDescription>
+            {concluded.category ? getCategoryLabel(concluded.category) : '—'}
+          </DescriptionListDescription>
         </DescriptionListGroup>
       </DescriptionList>
     </Card>

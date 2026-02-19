@@ -1,16 +1,62 @@
 import {useMemo} from 'react';
-import {Card, Icon} from '@patternfly/react-core';
+import {Card, Flex, FlexItem, Icon} from '@patternfly/react-core';
 import {Table, TableVariant, Tbody, Td, Th, Thead, Tr} from '@patternfly/react-table';
 import SecurityIcon from '@patternfly/react-icons/dist/esm/icons/security-icon';
 import {LicenseInfo} from '../api/report';
 import {getCategoryColor, getCategoryLabel, getCategorySortIndex} from './LicensesCountByCategory';
 import {ConditionalTableBody} from './TableControls/ConditionalTableBody';
 
+const FSF_LOGO_URL = 'https://www.gnu.org/graphics/fsf-logo-notext-small.png';
+const OSI_LOGO_URL = 'https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/open-source-initiative.svg';
+const DEPRECATED_SHIELD_COLOR = '#F0AB00'; // PatternFly warning yellow
+
 const columnNames = {
   evidence: 'Evidence',
   expression: 'Expression',
   category: 'Category',
+  status: 'Status',
 };
+
+function IdentifierBadges({info}: {info: LicenseInfo}) {
+  const ids = info?.identifiers ?? [];
+  const isDeprecated = ids.some((i) => i.isDeprecated === true);
+  const isOsiApproved = ids.some((i) => i.isOsiApproved === true);
+  const isFsfLibre = ids.some((i) => i.isFsfLibre === true);
+  if (!isDeprecated && !isOsiApproved && !isFsfLibre) return <>—</>;
+  return (
+    <Flex gap={{default: 'gapSm'}} alignItems={{default: 'alignItemsCenter'}}>
+      {isDeprecated && (
+        <FlexItem>
+          <span title="Deprecated identifier">
+            <Icon isInline>
+              <SecurityIcon style={{ fill: DEPRECATED_SHIELD_COLOR, height: '13px' }} />
+            </Icon>
+          </span>
+        </FlexItem>
+      )}
+      {isOsiApproved && (
+        <FlexItem>
+          <img
+            src={OSI_LOGO_URL}
+            alt="OSI Approved"
+            title="OSI Approved"
+            style={{height: '1.1em', verticalAlign: 'middle'}}
+          />
+        </FlexItem>
+      )}
+      {isFsfLibre && (
+        <FlexItem>
+          <img
+            src={FSF_LOGO_URL}
+            alt="FSF Libre"
+            title="FSF Free/Libre"
+            style={{height: '1.1em', verticalAlign: 'middle'}}
+          />
+        </FlexItem>
+      )}
+    </Flex>
+  );
+}
 
 export const EvidenceLicensesTable = ({
   evidence = [],
@@ -31,15 +77,16 @@ export const EvidenceLicensesTable = ({
       <Table variant={TableVariant.compact} aria-label="Evidence licenses">
         <Thead>
           <Tr>
-            <Th width={40}>{columnNames.evidence}</Th>
-            <Th width={30}>{columnNames.expression}</Th>
-            <Th width={30}>{columnNames.category}</Th>
+            <Th width={35}>{columnNames.evidence}</Th>
+            <Th width={25}>{columnNames.expression}</Th>
+            <Th width={25}>{columnNames.category}</Th>
+            <Th width={15}>{columnNames.status}</Th>
           </Tr>
         </Thead>
-        <ConditionalTableBody isNoData={sortedEvidence.length === 0} numRenderedColumns={3}>
+        <ConditionalTableBody isNoData={sortedEvidence.length === 0} numRenderedColumns={4}>
           <Tbody>
             {sortedEvidence.map((info, rowIndex) => {
-              const evidenceLabel = info.name || info.identifiers?.join(', ') || info.expression || '—';
+              const evidenceLabel = info.name || info.identifiers?.map((i) => i.name || i.id).join(', ') || info.expression || '—';
               const expression = info.expression || '—';
               const category = info.category || '—';
               const color = getCategoryColor(info.category);
@@ -59,6 +106,9 @@ export const EvidenceLicensesTable = ({
                     ) : (
                       '—'
                     )}
+                  </Td>
+                  <Td dataLabel={columnNames.status}>
+                    <IdentifierBadges info={info} />
                   </Td>
                 </Tr>
               );
